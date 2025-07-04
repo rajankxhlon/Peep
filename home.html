@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Clone Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- General Body & Layout (Portrait Focused) --- */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column; /* Stacks header, main content, footer vertically */
+            min-height: 100vh; /* Ensures body takes full viewport height */
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* Includes padding and border in element's total width and height */
+            overflow-x: hidden; /* Prevent horizontal scroll on small screens */
+        }
+
+        .main-content {
+            flex-grow: 1; /* Allows main content to fill available vertical space */
+            display: flex;
+            flex-direction: column; /* Stack content vertically within main-content */
+            align-items: center; /* Center content horizontally */
+            padding: 15px; /* Consistent padding for the main area */
+            box-sizing: border-box;
+            width: 100%; /* Ensure main content uses full width */
+        }
+
+        /* --- Tweet Composer Section --- */
+        .tweet-composer {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px; /* Match container max-width */
+            margin-bottom: 20px; /* Space below composer */
+            box-sizing: border-box;
+        }
+
+        .tweet-composer textarea {
+            width: calc(100% - 20px); /* Account for padding */
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: vertical; /* Allow vertical resizing */
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .composer-options {
+            display: flex;
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .composer-options input[type="file"],
+        .composer-options input[type="text"] {
+            flex: 1; /* Allow inputs to grow and shrink */
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5%px;
+            font-size: 14px;
+            min-width: 150px; /* Ensure inputs don't become too small */
+        }
+
+        /* --- Custom styling for the camera and video icon buttons (smaller) --- */
+        .camera-upload-btn,
+        .video-upload-btn {
+            background-color: #1da1f2; /* Twitter blue */
+            color: white;
+            padding: 6px 10px; /* Reduced padding */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease-in-out;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            height: 32px; /* Reduced height */
+        }
+
+        .camera-upload-btn:hover,
+        .video-upload-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
+
+        .composer-footer {
+            display: flex;
+            justify-content: flex-end; /* Push tweet button to the right */
+            align-items: center;
+        }
+
+        #image-preview,
+        #video-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none; /* Hidden by default */
+        }
+        #video-preview {
+            object-fit: contain; /* Ensure video scales properly within bounds */
+            background-color: black;
+        }
+
+        #upload-status {
+            font-size: 0.9em;
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .tweet-composer button#tweet-btn {
+            background-color: #1da1f2; /* Twitter blue for tweet button */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px; /* Rounded button */
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .tweet-composer button#tweet-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        /* --- Tweets Feed Section --- */
+        .tweets-feed {
+            width: 100%;
+            max-width: 450px; /* Match composer max-width */
+            box-sizing: border-box;
+        }
+
+        .tweet-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            word-wrap: break-word; /* Ensure long words break */
+            position: relative; /* Needed for absolute positioning of timestamp */
+        }
+
+        .tweet-card .tweet-header {
+            display: flex;
+            align-items: center; /* Align username and tick vertically */
+            justify-content: flex-start; /* Start items from the left */
+        }
+
+        /* --- Profile Picture/Fallback Letter Styling --- */
+        .profile-pic-container {
+            width: 40px; /* Size of the profile picture */
+            height: 40px;
+            border-radius: 50%; /* Make it circular */
+            overflow: hidden; /* Hide anything outside the circle */
+            margin-right: 10px; /* Space between profile pic and username */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ddd; /* Default background for fallback */
+            color: #555; /* Default text color for fallback */
+            font-size: 18px; /* Size of the letter */
+            font-weight: bold;
+            text-transform: uppercase;
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
+        .profile-pic-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the container without distortion */
+        }
+
+        .tweet-card .username-link { /* New style for the clickable username link */
+            display: flex;
+            align-items: center;
+            text-decoration: none; /* Remove underline */
+            color: inherit; /* Inherit color from parent to apply blue later */
+        }
+
+        .tweet-card .username {
+            font-weight: bold;
+            color: #66757f; /* Twitter blue for username */
+            font-size: 15px;
+            transition: color 0.2s ease-in-out; /* Smooth transition for hover */
+        }
+        .tweet-card .username:hover {
+            color: #1da1f2; /* Hover effect for username */
+        }
+
+        /* --- Verified Tick Styling --- */
+        .verified-tick {
+            width: 18px; /* Size of the tick */
+            height: 18px;
+            margin-left: 4px; /* Space between username and tick */
+            vertical-align: middle; /* Align with text baseline */
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
+        /* --- Follow/Unfollow Button Styling (position in header) --- */
+        .follow-btn {
+            background-color: #1da1f2; /* Twitter blue */
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            margin-left: auto; /* Push to the right within the header */
+            white-space: nowrap; /* Prevent text wrap */
+        }
+
+        .follow-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        .follow-btn.unfollow {
+            background-color: #e0245e; /* Twitter red for unfollow */
+        }
+
+        .follow-btn.unfollow:hover {
+            background-color: #c71c4c;
+        }
+
+        /* --- Timestamp Styling (positioned at bottom right) --- */
+        .tweet-card .timestamp {
+            color: #66757f;
+            font-size: 12px; /* Slightly smaller for subtle placement */
+            position: absolute; /* Position relative to the .tweet-card */
+            bottom: 10px; /* Distance from bottom */
+            right: 15px; /* Distance from right padding */
+        }
+
+        .tweet-card .tweet-content {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 10px; /* Space before image/link */
+        }
+
+        .tweet-card .tweet-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            display: block; /* Ensure it takes full width and new line */
+        }
+
+        .tweet-card .tweet-video-container {
+            position: relative; /* For mute button positioning */
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            overflow: hidden; /* Ensures video respects border-radius */
+        }
+
+        .tweet-card .tweet-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .tweet-card .video-mute-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .tweet-card .video-mute-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .tweet-card .tweet-link {
+            font-size: 0.9em;
+            color: #1da1f2;
+            word-break: break-all; /* Break long URLs */
+            margin-top: 5px;
+            margin-bottom: 10px; /* Adjust margin for tweet actions */
+        }
+        /* --- Tweet Actions (Like/Reply/Repost) Styling --- */
+        .tweet-actions {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            margin-top: 10px; /* Space from content above */
+            margin-bottom: 25px; /* Add space to prevent overlap with timestamp */
+        }
+
+        .tweet-action-btn {
+            background: none;
+            border: none;
+            color: #66757f;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .tweet-action-btn i {
+            font-size: 18px;
+        }
+
+        .tweet-action-btn:hover {
+            color: #1da1f2;
+        }
+
+        .tweet-action-btn.like-btn.liked {
+            color: #e0245e; /* Red for liked tweets */
+        }
+
+        .tweet-action-btn.like-btn.liked i {
+            color: #e0245e; /* Red icon for liked tweets */
+        }
+
+        .tweet-action-btn.repost-btn.reposted {
+            color: #17bf63; /* Green for reposted tweets (Twitter's retweet color) */
+        }
+
+        .tweet-action-btn.repost-btn.reposted i {
+            color: #17bf63; /* Green icon for reposted tweets */
+        }
+
+        /* --- Header Styling --- */
+        .header {
+            background-color: #1da1f2; /* Twitter Blue */
+            color: white;
+            padding: 12px 15px; /* Slightly less padding for a compact header */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: flex-start; /* Aligned to the left */
+            align-items: center;
+            width: 100%; /* Ensure header takes full width */
+            box-sizing: border-box;
+        }
+
+        .header .welcome-username-container {
+            display: flex;
+            align-items: center;
+            gap: 5px; /* Space between username and tick */
+            font-size: 14px; /* Smaller font size for compactness */
+            font-weight: bold;
+            color: white;
+            white-space: nowrap; /* Prevent username from wrapping */
+            overflow: hidden; /* Hide overflow if too long */
+            text-overflow: ellipsis; /* Add ellipsis for overflowed text */
+            margin-left: 0; /* Ensure it starts from the left */
+        }
+
+        /* Re-using the existing verified-tick class for the header tick */
+        .header .verified-tick {
+            width: 16px; /* Slightly smaller tick in header */
+            height: 16px;
+            margin-left: 0; /* Remove extra margin if any */
+            flex-shrink: 0;
+        }
+
+
+        /* --- Footer Styling --- */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            padding: 8px 0; /* Slightly less padding for a compact footer */
+            width: 100%;
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        .footer-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #66757f;
+            text-decoration: none;
+            font-size: 11px; /* Smaller text for icons */
+            transition: color 0.2s ease-in-out;
+            padding: 5px 0; /* Add some padding around icons for touch targets */
+            flex: 1; /* Distribute space equally */
+            min-width: 0; /* Allow shrinking in tight spaces */
+            position: relative; /* Needed for badge positioning */
+        }
+
+        .footer-icon i {
+            font-size: 22px; /* Slightly smaller icons */
+            margin-bottom: 3px;
+        }
+
+        .footer-icon:hover,
+        .footer-icon.active {
+            color: #1da1f2;
+        }
+
+        /* --- Notification Badge Styling --- */
+        .notification-badge {
+            position: absolute;
+            top: 2px; /* Adjust as needed */
+            right: 18px; /* Adjust as needed */
+            background-color: #e0245e; /* Red color for notification */
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px; /* Adjust padding for number size */
+            font-size: 10px; /* Smaller font size for badge */
+            font-weight: bold;
+            min-width: 12px; /* Ensure it's a circle even for single digit */
+            text-align: center;
+            display: none; /* Hidden by default */
+            transform: translate(50%, -50%); /* Adjust position precisely */
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div id="header-welcome-username-container" class="welcome-username-container">
+            <span id="header-welcome-username"></span>
+            </div>
+    </header>
+
+    <div class="main-content">
+        <div class="tweet-composer">
+            <textarea id="tweet-input" placeholder="What's happening?"></textarea>
+
+            <img id="image-preview" src="#" alt="Image Preview">
+            <video id="video-preview" src="#" controls muted loop alt="Video Preview"></video>
+
+            <div class="composer-options">
+                <input type="file" id="image-upload-input" accept="image/*" class="hidden-file-input">
+                <label for="image-upload-input" class="camera-upload-btn">
+                    <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="video-upload-input" accept="video/*" class="hidden-file-input">
+                <label for="video-upload-input" class="video-upload-btn">
+                    <i class="fas fa-video"></i>
+                </label>
+                <input type="text" id="link-input" placeholder="Add a link (e.g., https://example.com)">
+                <span id="upload-status"></span>
+            </div>
+
+            <div class="composer-footer">
+                <button id="tweet-btn">Post</button>
+            </div>
+        </div>
+
+        <div class="tweets-feed" id="tweets-feed">
+            <p style="text-align: center; color: #66757f;">Loading peeps...</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <a href="home.html" class="footer-icon active">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="footer-icon">
+            <i class="fas fa-search"></i>
+            <span>Search</span>
+        </a>
+        <a href="notifications.html" class="footer-icon" id="notifications-link">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+            <span class="notification-badge" id="notification-badge"></span>
+        </a>
+        <a href="profile.html" class="footer-icon">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase configuration (same as index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Get elements
+        const headerWelcomeUsernameContainer = document.getElementById('header-welcome-username-container'); // New container element
+        const headerWelcomeUsernameElement = document.getElementById('header-welcome-username');
+        const tweetInput = document.getElementById('tweet-input');
+        const tweetBtn = document.getElementById('tweet-btn');
+        const tweetsFeed = document.getElementById('tweets-feed');
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const imagePreview = document.getElementById('image-preview');
+        const videoUploadInput = document.getElementById('video-upload-input'); // New: Video input
+        const videoPreview = document.getElementById('video-preview');     // New: Video preview
+        const linkInput = document.getElementById('link-input');
+        const uploadStatus = document.getElementById('upload-status');
+        const notificationBadge = document.getElementById('notification-badge'); // Get the badge element
+
+        let currentUsername = null; // Store username globally for tweet posting
+        let currentUserId = null; // Store current user's UID
+        let currentIsVerified = false; // Store user's verified status
+        let uploadedImageUrl = null; // Store the URL of the uploaded image
+        let uploadedVideoUrl = null; // New: Store the URL of the uploaded video
+        let following = new Set(); // Store usernames the current user is following
+
+        // ImgBB API Key (for images)
+        const IMGBB_API_KEY = '7184e56bb0953c0545409c441c402a66';
+
+        // Cloudinary Configuration (for videos) - REPLACE WITH YOUR ACTUAL CLOUDINARY DETAILS
+        const CLOUDINARY_CLOUD_NAME = 'dhbqsbv0a'; // Replace with your Cloudinary Cloud Name
+        const CLOUDINARY_UPLOAD_PRESET = 'rajan_upload'; // Replace with your Cloudinary Upload Preset
+
+        // Helper function to format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Just now';
+            const date = timestamp.toDate(); // Convert Firestore Timestamp to Date object
+            const now = new Date();
+            const diffMs = now - date; // Difference in milliseconds
+
+            const seconds = Math.floor(diffMs / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+
+            // For older dates, show month and day, or full date
+            const options = { month: 'short', day: 'numeric' };
+            if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+            }
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Fisher-Yates (Knuth) Shuffle algorithm for randomizing array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Function to create the verified tick SVG element
+        function createVerifiedTickSvg() {
+            const svgString = `<svg class="verified-tick" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
+<g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+	<polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+	<polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+</g>
+</svg>`;
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
+            return svgDoc.documentElement;
+        }
+
+        // Function to upload image to ImgBB
+        async function uploadImageToImgBB(file) {
+            uploadStatus.textContent = 'Uploading image...';
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    uploadedImageUrl = data.data.url;
+                    imagePreview.src = uploadedImageUrl;
+                    imagePreview.style.display = 'block';
+                    uploadStatus.textContent = 'Image uploaded!';
+                    // Hide video preview if an image is uploaded
+                    videoPreview.style.display = 'none';
+                    videoPreview.src = '#';
+                    uploadedVideoUrl = null;
+                    return uploadedImageUrl;
+                } else {
+                    throw new Error(data.error.message || 'ImgBB upload failed');
+                }
+            } catch (error) {
+                console.error("Error uploading image to ImgBB:", error);
+                uploadStatus.textContent = 'Image upload failed!';
+                uploadedImageUrl = null;
+                imagePreview.style.display = 'none';
+                return null;
+            }
+        }
+
+        // Function to upload video to Cloudinary
+        async function uploadVideoToCloudinary(file) {
+            uploadStatus.textContent = 'Uploading video...';
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.secure_url) {
+                    uploadedVideoUrl = data.secure_url;
+                    videoPreview.src = uploadedVideoUrl;
+                    videoPreview.style.display = 'block';
+                    videoPreview.load(); // Load the video to make it ready for playback
+                    uploadStatus.textContent = 'Video uploaded!';
+                    // Hide image preview if a video is uploaded
+                    imagePreview.style.display = 'none';
+                    imagePreview.src = '#';
+                    uploadedImageUrl = null;
+                    return uploadedVideoUrl;
+                } else {
+                    throw new Error(data.error.message || 'Cloudinary upload failed');
+                }
+            } catch (error) {
+                console.error("Error uploading video to Cloudinary:", error);
+                uploadStatus.textContent = 'Video upload failed!';
+                uploadedVideoUrl = null;
+                videoPreview.style.display = 'none';
+                return null;
+            }
+        }
+
+        // Event listener for image file selection
+        imageUploadInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Display local preview immediately
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    // Hide video preview when selecting an image
+                    videoPreview.style.display = 'none';
+                    videoPreview.src = '#';
+                    uploadedVideoUrl = null;
+                };
+                reader.readAsDataURL(file);
+
+                // Upload to ImgBB
+                await uploadImageToImgBB(file);
+            } else {
+                imagePreview.style.display = 'none';
+                uploadedImageUrl = null;
+                uploadStatus.textContent = '';
+            }
+        });
+
+        // Event listener for video file selection (New)
+        videoUploadInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Display local preview immediately
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    videoPreview.src = e.target.result;
+                    videoPreview.style.display = 'block';
+                    videoPreview.muted = true; // Start muted
+                    videoPreview.play(); // Autoplay local preview
+                    // Hide image preview when selecting a video
+                    imagePreview.style.display = 'none';
+                    imagePreview.src = '#';
+                    uploadedImageUrl = null;
+                };
+                reader.readAsDataURL(file);
+
+                // Upload to Cloudinary
+                await uploadVideoToCloudinary(file);
+            } else {
+                videoPreview.style.display = 'none';
+                videoPreview.src = '#';
+                uploadedVideoUrl = null;
+                uploadStatus.textContent = '';
+            }
+        });
+
+        // Function to fetch current user's following list
+        async function fetchFollowingList(userId) {
+            if (!userId) return;
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    following = new Set(userData.following || []);
+                } else {
+                    following = new Set(); // User doc might not exist yet if they haven't followed anyone
+                }
+            } catch (error) {
+                console.error("Error fetching following list:", error);
+            }
+        }
+
+        // Function to handle follow/unfollow action
+        async function toggleFollow(targetUsername, targetUserId, buttonElement) {
+            if (!currentUserId || !currentUsername) {
+                alert("You must be logged in to follow/unfollow users.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (targetUsername === currentUsername) {
+                alert("You cannot follow or unfollow yourself.");
+                return;
+            }
+
+            const userRef = db.collection('users').doc(currentUserId);
+            const targetUserRef = db.collection('users').doc(targetUserId);
+
+            try {
+                if (following.has(targetUsername)) {
+                    // --- Unfollow Logic ---
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayRemove(targetUsername)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUsername)
+                    });
+                    following.delete(targetUsername);
+                    buttonElement.textContent = 'Follow';
+                    buttonElement.classList.remove('unfollow');
+
+                } else {
+                    // --- Follow Logic ---
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayUnion(targetUsername)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUsername)
+                    });
+                    following.add(targetUsername);
+                    buttonElement.textContent = 'Unfollow';
+                    buttonElement.classList.add('unfollow');
+
+                    // ******************************************************
+                    // MODIFIED: CREATE/UPDATE NOTIFICATION WHEN A USER IS FOLLOWED
+                    // This is the core change to prevent duplicate follow notifications.
+                    // ******************************************************
+                    try {
+                        // Check if a notification already exists from current user to target user
+                        const existingNotificationQuery = await db.collection('notifications')
+                            .where('type', '==', 'follow')
+                            .where('fromUserId', '==', currentUserId)
+                            .where('toUserId', '==', targetUserId)
+                            .limit(1) // We only need one if it exists
+                            .get();
+
+                        if (!existingNotificationQuery.empty) {
+                            // If an existing notification is found, update it
+                            const existingNotificationDoc = existingNotificationQuery.docs[0];
+                            await existingNotificationDoc.ref.update({
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(), // Update timestamp to make it "new"
+                                read: false, // Mark as unread
+                                actionTaken: false // Clear actionTaken if it was set (e.g., after an unfollow)
+                            });
+                            console.log(`Updated existing follow notification for ${targetUsername} from ${currentUsername}`);
+                        } else {
+                            // If no existing notification, create a new one
+                            await db.collection('notifications').add({
+                                type: 'follow',
+                                fromUsername: currentUsername,  // The user who initiated the follow
+                                fromUserId: currentUserId,      // Their UID
+                                toUsername: targetUsername,     // The user who was just followed (recipient)
+                                toUserId: targetUserId,         // Their UID
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false, // Mark as unread
+                                actionTaken: false // Initially no action taken
+                            });
+                            console.log(`Created new follow notification for ${targetUsername} from ${currentUsername}`);
+                        }
+                    } catch (notificationError) {
+                        console.error("Error handling follow notification (create/update):", notificationError);
+                        // Log this error, but don't prevent the follow action from completing
+                    }
+                    // ******************************************************
+                }
+            } catch (error) {
+                console.error("Error toggling follow status:", error);
+                alert("Failed to update follow status. Please try again.");
+            }
+        }
+
+        // Function to add event listeners for like, repost, and reply buttons
+        function addTweetActionListeners(tweetCard, tweetId, initialLikes = [], initialReposts = []) {
+            const likeButton = tweetCard.querySelector('.like-btn');
+            const likeCountSpan = tweetCard.querySelector('.like-count');
+            const repostButton = tweetCard.querySelector('.repost-btn');
+            const repostCountSpan = tweetCard.querySelector('.repost-count');
+            const replyButton = tweetCard.querySelector('.reply-btn');
+
+            let likes = new Set(initialLikes); // Initialize with existing likes from tweet data
+            let reposts = new Set(initialReposts); // Initialize with existing reposts
+
+            // Set initial liked state
+            if (currentUserId && likes.has(currentUserId)) {
+                likeButton.classList.add('liked');
+            } else {
+                likeButton.classList.remove('liked');
+            }
+            likeCountSpan.textContent = likes.size;
+
+            // Set initial reposted state
+            if (currentUserId && reposts.has(currentUserId)) {
+                repostButton.classList.add('reposted');
+            } else {
+                repostButton.classList.remove('reposted');
+            }
+            repostCountSpan.textContent = reposts.size;
+
+
+            // Like Button Event Listener
+            likeButton.addEventListener('click', async () => {
+                if (!currentUserId) {
+                    alert("You must be logged in to like tweets.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const tweetRef = db.collection('tweets').doc(tweetId);
+
+                try {
+                    if (likes.has(currentUserId)) {
+                        // Unlike the tweet
+                        await tweetRef.update({
+                            likes: firebase.firestore.FieldValue.arrayRemove(currentUserId)
+                        });
+                        likes.delete(currentUserId);
+                        likeButton.classList.remove('liked');
+                    } else {
+                        // Like the tweet
+                        await tweetRef.update({
+                            likes: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                        });
+                        likes.add(currentUserId);
+                        likeButton.classList.add('liked');
+
+                        // Optionally, create a like notification (similar to follow)
+                         // ******************************************************
+                        // CREATE NOTIFICATION WHEN A USER LIKES A PEEP
+                        // ******************************************************
+                        const tweetDoc = await tweetRef.get();
+                        if (tweetDoc.exists) {
+                            const tweetData = tweetDoc.data();
+                            if (tweetData.userId !== currentUserId) { // Don't notify if user likes their own tweet
+                                try {
+                                    await db.collection('notifications').add({
+                                        type: 'like',
+                                        fromUsername: currentUsername,
+                                        fromUserId: currentUserId,
+                                        toUsername: tweetData.username, // The author of the liked tweet
+                                        toUserId: tweetData.userId,
+                                        tweetId: tweetId, // Reference to the liked tweet
+                                        tweetContent: tweetData.content.substring(0, 50) + (tweetData.content.length > 50 ? '...' : ''), // Snippet of tweet
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        read: false
+                                    });
+                                    console.log(`Like notification created for ${tweetData.username} from ${currentUsername}`);
+                                } catch (notificationError) {
+                                    console.error("Error creating like notification:", notificationError);
+                                }
+                            }
+                        }
+                        // ******************************************************
+                    }
+                    likeCountSpan.textContent = likes.size; // Update displayed count
+                } catch (error) {
+                    console.error("Error updating like status:", error);
+                    alert("Failed to update like status. Please try again.");
+                }
+            });
+
+            // Repost Button Event Listener
+            repostButton.addEventListener('click', async () => {
+                if (!currentUserId) {
+                    alert("You must be logged in to repost tweets.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const tweetRef = db.collection('tweets').doc(tweetId);
+
+                try {
+                    if (reposts.has(currentUserId)) {
+                        // Unrepost the tweet
+                        await tweetRef.update({
+                            reposts: firebase.firestore.FieldValue.arrayRemove(currentUserId)
+                        });
+                        reposts.delete(currentUserId);
+                        repostButton.classList.remove('reposted');
+                    } else {
+                        // Repost the tweet
+                        await tweetRef.update({
+                            reposts: firebase.firestore.FieldValue.arrayUnion(currentUserId)
+                        });
+                        reposts.add(currentUserId);
+                        repostButton.classList.add('reposted');
+
+                        // Optionally, create a repost notification
+                        const tweetDoc = await tweetRef.get();
+                        if (tweetDoc.exists) {
+                            const tweetData = tweetDoc.data();
+                            if (tweetData.userId !== currentUserId) { // Don't notify if user reposts their own tweet
+                                try {
+                                    await db.collection('notifications').add({
+                                        type: 'repost',
+                                        fromUsername: currentUsername,
+                                        fromUserId: currentUserId,
+                                        toUsername: tweetData.username, // The author of the reposted tweet
+                                        toUserId: tweetData.userId,
+                                        tweetId: tweetId, // Reference to the reposted tweet
+                                        tweetContent: tweetData.content.substring(0, 50) + (tweetData.content.length > 50 ? '...' : ''), // Snippet of tweet
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        read: false
+                                    });
+                                    console.log(`Repost notification created for ${tweetData.username} from ${currentUsername}`);
+                                } catch (notificationError) {
+                                    console.error("Error creating repost notification:", notificationError);
+                                }
+                            }
+                        }
+                    }
+                    repostCountSpan.textContent = reposts.size; // Update displayed count
+                } catch (error) {
+                    console.error("Error updating repost status:", error);
+                    alert("Failed to update repost status. Please try again.");
+                }
+            });
+
+            // Redirect to reply.html with tweetId as a query parameter
+            replyButton.addEventListener('click', () => {
+                if (!currentUserId) {
+                    alert("You must be logged in to reply to tweets.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+                window.location.href = `reply.html?tweetId=${tweetId}`;
+            });
+        }
+
+
+        // Function to fetch and display tweets
+        async function fetchAndDisplayTweets() {
+            tweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">Loading peeps...</p>'; // Show loading message
+            try {
+                const tweetsSnapshot = await db.collection('tweets').get();
+                let tweets = [];
+                let userPromises = []; // To fetch user data concurrently
+
+                tweetsSnapshot.forEach(doc => {
+                    const tweet = { id: doc.id, ...doc.data() };
+                    tweets.push(tweet);
+                    // Add promise to fetch user data for this tweet's author
+                    userPromises.push(db.collection('users').doc(tweet.userId).get());
+                });
+
+                const userDocs = await Promise.all(userPromises);
+                const usersData = {}; // Store user data by userId for quick lookup
+                userDocs.forEach(userDoc => {
+                    if (userDoc.exists) {
+                        usersData[userDoc.id] = userDoc.data();
+                    }
+                });
+
+                // Shuffle the tweets array
+                shuffleArray(tweets);
+
+                tweetsFeed.innerHTML = ''; // Clear loading message
+
+                if (tweets.length === 0) {
+                    tweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">No tweets yet! Be the first to post.</p>';
+                    return;
+                }
+
+                tweets.forEach(tweet => {
+                    const tweetCard = document.createElement('div');
+                    tweetCard.classList.add('tweet-card');
+
+                    const tweetHeader = document.createElement('div');
+                    tweetHeader.classList.add('tweet-header');
+
+                    // --- Profile Picture / First Letter ---
+                    const profilePicContainer = document.createElement('div');
+                    profilePicContainer.classList.add('profile-pic-container');
+
+                    const tweetAuthorData = usersData[tweet.userId];
+                    if (tweetAuthorData && tweetAuthorData.profilePictureUrl) {
+                        const profilePicImg = document.createElement('img');
+                        profilePicImg.src = tweetAuthorData.profilePictureUrl;
+                        profilePicImg.alt = `${tweet.username}'s profile picture`;
+                        profilePicContainer.appendChild(profilePicImg);
+                    } else {
+                        // Fallback: first letter of username
+                        const firstLetter = document.createElement('span');
+                        firstLetter.textContent = tweet.username ? tweet.username.charAt(0).toUpperCase() : '?';
+                        profilePicContainer.appendChild(firstLetter);
+                    }
+                    tweetHeader.appendChild(profilePicContainer);
+
+                    // --- Clickable Username (New) ---
+                    const usernameLink = document.createElement('a');
+                    usernameLink.href = `user_profile.html?username=${encodeURIComponent(tweet.username)}`;
+                    usernameLink.classList.add('username-link'); // Add a class for styling if needed
+
+                    const usernameSpan = document.createElement('span');
+                    usernameSpan.classList.add('username');
+                    usernameSpan.textContent = tweet.username; // Display username
+                    usernameLink.appendChild(usernameSpan);
+
+                    // MODIFIED: Use the live verified status from usersData
+                    if (tweetAuthorData && tweetAuthorData.isVerified) {
+                        usernameLink.appendChild(createVerifiedTickSvg()); // Append tick inside the link
+                    }
+                    tweetHeader.appendChild(usernameLink); // Append the entire link container
+
+
+                    // Follow/Unfollow Button
+                    const followButton = document.createElement('button');
+                    followButton.classList.add('follow-btn');
+                    followButton.dataset.username = tweet.username; // Store target username
+                    followButton.dataset.userId = tweet.userId; // Store target user ID
+
+                    // Determine initial button text and class
+                    if (currentUsername && tweet.username === currentUsername) {
+                        followButton.textContent = 'You'; // User's own tweet
+                        followButton.disabled = true; // Disable follow/unfollow on self
+                    } else if (following.has(tweet.username)) {
+                        followButton.textContent = 'Unfollow';
+                        followButton.classList.add('unfollow');
+                    } else {
+                        followButton.textContent = 'Follow';
+                    }
+
+                    followButton.addEventListener('click', () => {
+                        toggleFollow(tweet.username, tweet.userId, followButton);
+                    });
+                    tweetHeader.appendChild(followButton);
+
+
+                    const contentP = document.createElement('p');
+                    contentP.classList.add('tweet-content');
+                    contentP.textContent = tweet.content;
+
+                    tweetCard.appendChild(tweetHeader); // Append header first
+                    tweetCard.appendChild(contentP); // Then append content
+
+                    // Display image if available
+                    if (tweet.imageUrl) {
+                        const tweetImage = document.createElement('img');
+                        tweetImage.classList.add('tweet-image');
+                        tweetImage.src = tweet.imageUrl;
+                        tweetImage.alt = 'Tweet image';
+                        tweetCard.appendChild(tweetImage);
+                    }
+                    // Display video if available (New)
+                    else if (tweet.videoUrl) {
+                        const videoContainer = document.createElement('div');
+                        videoContainer.classList.add('tweet-video-container');
+
+                        const tweetVideo = document.createElement('video');
+                        tweetVideo.classList.add('tweet-video');
+                        tweetVideo.src = tweet.videoUrl;
+                        tweetVideo.autoplay = false; // Initially set to false for Intersection Observer
+                        tweetVideo.loop = true;     // Loop
+                        tweetVideo.muted = true;    // Start muted
+                        tweetVideo.alt = 'Tweet video';
+                        tweetVideo.playsInline = true; // For iOS autoplay
+                        tweetVideo.preload = "metadata"; // Preload metadata to get video dimensions faster
+
+                        // Play/Pause on click
+                        tweetVideo.addEventListener('click', () => {
+                            if (tweetVideo.paused) {
+                                tweetVideo.play();
+                            } else {
+                                tweetVideo.pause();
+                            }
+                        });
+
+                        const muteButton = document.createElement('button');
+                        muteButton.classList.add('video-mute-btn');
+                        muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>'; // Muted icon by default
+
+                        muteButton.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Prevent video from pausing/playing
+                            tweetVideo.muted = !tweetVideo.muted;
+                            if (tweetVideo.muted) {
+                                muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                            } else {
+                                muteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                            }
+                        });
+
+                        videoContainer.appendChild(tweetVideo);
+                        videoContainer.appendChild(muteButton);
+                        tweetCard.appendChild(videoContainer);
+
+                        // Attach Intersection Observer to the video
+                        videoObserver.observe(tweetVideo);
+                    }
+
+
+                    // Display link if available
+                    if (tweet.linkUrl) {
+                        const tweetLink = document.createElement('a');
+                        tweetLink.classList.add('tweet-link');
+                        tweetLink.href = tweet.linkUrl;
+                        tweetLink.target = '_blank'; // Open in new tab
+                        tweetLink.rel = 'noopener noreferrer'; // Security best practice
+                        tweetLink.textContent = tweet.linkUrl;
+                        tweetCard.appendChild(tweetLink);
+                    }
+
+                    // --- Tweet Actions (Like/Repost/Reply) ---
+                    const tweetActions = document.createElement('div');
+                    tweetActions.classList.add('tweet-actions');
+
+                    // Like Button
+                    const likeButton = document.createElement('button');
+                    likeButton.classList.add('tweet-action-btn', 'like-btn');
+                    likeButton.innerHTML = `<i class="far fa-heart"></i> <span class="like-count">${tweet.likes ? tweet.likes.length : 0}</span>`; // Initial like count
+                    tweetActions.appendChild(likeButton);
+
+                    // Repost Button
+                    const repostButton = document.createElement('button');
+                    repostButton.classList.add('tweet-action-btn', 'repost-btn');
+                    repostButton.innerHTML = `<i class="fas fa-retweet"></i> <span class="repost-count">${tweet.reposts ? tweet.reposts.length : 0}</span>`; // Initial repost count
+                    tweetActions.appendChild(repostButton);
+
+                    // Reply Button
+                    const replyButton = document.createElement('button');
+                    replyButton.classList.add('tweet-action-btn', 'reply-btn');
+                    replyButton.innerHTML = `<i class="far fa-comment"></i> <span>Reply</span>`;
+                    tweetActions.appendChild(replyButton);
+
+                    tweetCard.appendChild(tweetActions);
+
+                    // Timestamp - added at the end of the card, but before the tweet actions in terms of layout order
+                    // We'll keep the absolute positioning for timestamp for visual separation
+                    const timestampSpan = document.createElement('span');
+                    timestampSpan.classList.add('timestamp');
+                    timestampSpan.textContent = tweet.timestamp ? formatTimestamp(tweet.timestamp) : 'Just now';
+                    tweetCard.appendChild(timestampSpan); // Append timestamp to the card directly
+
+                    tweetsFeed.appendChild(tweetCard);
+
+                    // Add listeners for like, repost and reply
+                    addTweetActionListeners(tweetCard, tweet.id, tweet.likes || [], tweet.reposts || []);
+                });
+            } catch (error) {
+                console.error("Error fetching tweets:", error);
+                tweetsFeed.innerHTML = '<p style="text-align: center; color: red;">Error loading tweets. Please try again.</p>';
+            }
+        }
+
+        // --- Intersection Observer for Video Autoplay ---
+        const videoObserverOptions = {
+            root: null, // Observe relative to the viewport
+            rootMargin: '0px',
+            threshold: 0.8 // Play when 80% of the video is visible
+        };
+
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    // Video is in view, play it
+                    video.play().catch(error => {
+                        console.warn("Video autoplay prevented:", error);
+                        // Autoplay might be blocked by browser policies.
+                        // You might want to show a play button here.
+                    });
+                } else {
+                    // Video is out of view, pause it
+                    video.pause();
+                }
+            });
+        }, videoObserverOptions);
+
+
+        // --- Notification Badge Logic ---
+        function updateNotificationBadge(count) {
+            if (count > 0) {
+                notificationBadge.textContent = count;
+                notificationBadge.style.display = 'block'; // Show the badge
+            } else {
+                notificationBadge.textContent = '';
+                notificationBadge.style.display = 'none'; // Hide the badge
+            }
+        }
+
+        // Listen for real-time updates to notifications
+        function setupNotificationListener(userId) {
+            if (!userId) return;
+
+            db.collection('notifications')
+                .where('toUserId', '==', userId)
+                .where('read', '==', false) // Only count unread notifications
+                .onSnapshot(snapshot => {
+                    const unreadCount = snapshot.docs.length;
+                    updateNotificationBadge(unreadCount);
+                }, error => {
+                    console.error("Error listening to notifications:", error);
+                });
+        }
+
+        // Check authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // User is signed in.
+                currentUserId = user.uid; // Set global user ID
+                try {
+                    // Try to get username and isVerified from the 'users' collection first
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists && userDoc.data().username) {
+                        const userData = userDoc.data();
+                        currentUsername = userData.username;
+                        currentIsVerified = userData.isVerified || false;
+                        headerWelcomeUsernameElement.textContent = `Welcome @${currentUsername}`;
+
+                        // Append verified tick if user is verified
+                        if (currentIsVerified) {
+                            // Clear existing tick if any before appending a new one
+                            const existingTick = headerWelcomeUsernameContainer.querySelector('.verified-tick');
+                            if (existingTick) {
+                                existingTick.remove();
+                            }
+                            headerWelcomeUsernameContainer.appendChild(createVerifiedTickSvg());
+                        }
+
+                    } else {
+                        // Fallback to 'usernames' collection if not found in 'users' (for existing data migration)
+                        const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
+                        if (!usernameQuery.empty) {
+                            const usernameDoc = usernameQuery.docs[0];
+                            currentUsername = usernameDoc.id;
+                            currentIsVerified = usernameDoc.data().isVerified || false;
+                            headerWelcomeUsernameElement.textContent = `Welcome @${currentUsername}`;
+                            // Optionally, migrate this data to the 'users' collection for consistency
+                            await db.collection('users').doc(user.uid).set({
+                                username: currentUsername,
+                                isVerified: currentIsVerified
+                            }, { merge: true });
+
+                             // Append verified tick if user is verified
+                            if (currentIsVerified) {
+                                // Clear existing tick if any before appending a new one
+                                const existingTick = headerWelcomeUsernameContainer.querySelector('.verified-tick');
+                                if (existingTick) {
+                                    existingTick.remove();
+                                }
+                                headerWelcomeUsernameContainer.appendChild(createVerifiedTickSvg());
+                            }
+                        } else {
+                            // If username is not set, redirect to index.html to prompt setup
+                            window.location.href = 'index.html';
+                            return; // Stop execution
+                        }
+                    }
+
+                    await fetchFollowingList(currentUserId); // Fetch following list
+                    fetchAndDisplayTweets(); // Fetch tweets once user is logged in
+                    setupNotificationListener(currentUserId); // Set up real-time notification listener
+
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    window.location.href = 'index.html'; // Redirect on error
+                }
+
+            } else {
+                // User is signed out, redirect to login page
+                window.location.href = 'index.html';
+            }
+        });
+
+        // --- Tweet Post Functionality ---
+        tweetBtn.addEventListener('click', async () => {
+            const tweetContent = tweetInput.value.trim();
+            const tweetLink = linkInput.value.trim();
+
+            if (!tweetContent && !uploadedImageUrl && !uploadedVideoUrl && !tweetLink) {
+                alert("Tweet, image, video, or link cannot be empty!");
+                return;
+            }
+
+            if (tweetContent.length > 280) { // Standard tweet character limit
+                alert("Tweet is too long! Max 280 characters.");
+                return;
+            }
+
+            // Basic link validation
+            let validLink = null;
+            if (tweetLink) {
+                try {
+                    const url = new URL(tweetLink); // Attempt to create a URL object
+                    validLink = url.href; // Use the normalized URL
+                }
+                catch (e) {
+                    alert("Please enter a valid URL for the link (e.g., https://example.com).");
+                    return;
+                }
+            }
+
+
+            if (!auth.currentUser || !currentUsername || !currentUserId) {
+                alert("You must be logged in and have a username to tweet.");
+                window.location.href = 'index.html'; // Redirect if not properly logged in
+                return;
+            }
+
+            // Construct tweet data
+            const tweetData = {
+                userId: auth.currentUser.uid,
+                username: currentUsername,
+                content: tweetContent,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                // No longer store isVerified directly in tweet, rely on live user data
+                likes: [], // Initialize likes as an empty array
+                reposts: [] // Initialize reposts as an empty array
+            };
+
+            if (uploadedImageUrl) {
+                tweetData.imageUrl = uploadedImageUrl;
+            } else if (uploadedVideoUrl) { // Add video URL if available
+                tweetData.videoUrl = uploadedVideoUrl;
+            }
+            if (validLink) {
+                tweetData.linkUrl = validLink;
+            }
+
+            try {
+                await db.collection('tweets').add(tweetData);
+
+                // Clear inputs and reset state
+                tweetInput.value = '';
+                imageUploadInput.value = ''; // Clear file input
+                imagePreview.style.display = 'none';
+                imagePreview.src = '#';
+                videoUploadInput.value = ''; // Clear video file input
+                videoPreview.style.display = 'none';
+                videoPreview.src = '#';
+                videoPreview.pause(); // Pause preview video
+                linkInput.value = '';
+                uploadedImageUrl = null; // Reset uploaded image URL
+                uploadedVideoUrl = null; // Reset uploaded video URL
+                uploadStatus.textContent = ''; // Clear upload status
+
+                fetchAndDisplayTweets(); // Re-fetch and display tweets after new post
+            } catch (error) {
+                console.error("Error posting tweet:", error);
+                alert("Failed to post tweet. Please try again.");
+            }
+        });
+    </script>
+</body>
+</html>

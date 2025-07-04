@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Twitter Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- General Body & Layout (Portrait Focused) --- */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column; /* Stacks header, main content, footer vertically */
+            min-height: 100vh; /* Ensures body takes full viewport height */
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* Includes padding and border in element's total width and height */
+            overflow-x: hidden; /* Prevent horizontal scroll on small screens */
+        }
+
+        .main-content {
+            flex-grow: 1; /* Allows main content to fill available vertical space */
+            display: flex;
+            flex-direction: column; /* Stack content vertically within main-content */
+            align-items: center; /* Center content horizontally */
+            padding: 15px; /* Consistent padding for the main area */
+            box-sizing: border-box;
+            width: 100%; /* Ensure main content uses full width */
+        }
+
+        /* --- Header Styling --- */
+        .header {
+            background-color: #1da1f2; /* Twitter Blue */
+            color: white;
+            padding: 12px 15px; /* Slightly less padding for a compact header */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between; /* Use space-between to push items to edges */
+            align-items: center;
+            width: 100%; /* Ensure header takes full width */
+            box-sizing: border-box;
+        }
+
+        .header .welcome-username {
+            font-size: 17px; /* Slightly smaller for compactness */
+            font-weight: bold;
+            color: white;
+            white-space: nowrap; /* Prevent username from wrapping */
+            overflow: hidden; /* Hide overflow if too long */
+            text-overflow: ellipsis; /* Add ellipsis for overflowed text */
+            flex-grow: 1; /* Allow username to take up available space */
+            text-align: center; /* Center the username if it's the only element */
+            margin: 0 auto; /* Center horizontally if no other elements are pushing */
+        }
+
+        /* --- Notifications Feed Section --- */
+        .notifications-feed {
+            width: 100%;
+            max-width: 450px; /* Match composer max-width */
+            box-sizing: border-box;
+            margin-top: 20px; /* Space from header */
+        }
+
+        .notification-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            word-wrap: break-word;
+            position: relative;
+            cursor: pointer; /* Indicate clickable */
+        }
+
+        .notification-card.unread {
+            border-left: 5px solid #1da1f2; /* Highlight unread notifications */
+        }
+
+        .notification-card .notification-content {
+            flex-grow: 1;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .notification-card .username {
+            font-weight: bold;
+            color: #1da1f2;
+        }
+
+        .notification-card .timestamp {
+            color: #66757f;
+            font-size: 12px;
+            white-space: nowrap; /* Prevent timestamp from wrapping */
+        }
+
+        /* --- Profile Picture/Fallback Letter Styling (for notifications) --- */
+        .profile-pic-container {
+            width: 40px; /* Size of the profile picture */
+            height: 40px;
+            border-radius: 50%; /* Make it circular */
+            overflow: hidden; /* Hide anything outside the circle */
+            margin-right: 10px; /* Space between profile pic and username */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ddd; /* Default background for fallback */
+            color: #555; /* Default text color for fallback */
+            font-size: 18px; /* Size of the letter */
+            font-weight: bold;
+            text-transform: uppercase;
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
+        .profile-pic-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the container without distortion */
+        }
+
+        /* --- Follow Back / Following Button Styling --- */
+        .follow-back-btn {
+            background-color: #1da1f2; /* Twitter blue */
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            white-space: nowrap;
+            margin-left: auto; /* Push to the right */
+        }
+
+        .follow-back-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        .follow-back-btn.unfollow { /* Class for unfollow state */
+            background-color: #e0245e; /* Twitter red for unfollow */
+        }
+
+        .follow-back-btn:hover {
+            background-color: #c71c4c;
+        }
+
+        .follow-back-btn:disabled {
+            background-color: #aab8c2; /* Gray out if disabled */
+            cursor: not-allowed;
+        }
+
+        /* --- Verified Tick Styling (similar to home.html) --- */
+        .verified-tick {
+            width: 18px; /* Size of the tick */
+            height: 18px;
+            margin-left: 4px; /* Space between username and tick */
+            vertical-align: middle; /* Align with text baseline */
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
+        /* --- Footer Styling --- */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            padding: 8px 0; /* Slightly less padding for a compact footer */
+            width: 100%;
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        .footer-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #66757f;
+            text-decoration: none;
+            font-size: 11px; /* Smaller text for icons */
+            transition: color 0.2s ease-in-out;
+            padding: 5px 0; /* Add some padding around icons for touch targets */
+            flex: 1; /* Distribute space equally */
+            min-width: 0; /* Allow shrinking in tight spaces */
+        }
+
+        .footer-icon i {
+            font-size: 22px; /* Slightly smaller icons */
+            margin-bottom: 3px;
+        }
+
+        .footer-icon:hover,
+        .footer-icon.active {
+            color: #1da1f2;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <span id="header-welcome-username" class="welcome-username">Notifications</span>
+    </header>
+
+    <div class="main-content">
+        <div class="notifications-feed" id="notifications-feed">
+            <p style="text-align: center; color: #66757f;">Loading notifications...</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <a href="home.html" class="footer-icon">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="footer-icon">
+            <i class="fas fa-search"></i>
+            <span>Search</span>
+        </a>
+        <a href="notifications.html" class="footer-icon active">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+        </a>
+        <a href="profile.html" class="footer-icon">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase configuration (same as index.html and home.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Get elements
+        const notificationsFeed = document.getElementById('notifications-feed');
+
+        let currentUsername = null;
+        let currentUserId = null;
+        let following = new Set(); // Store usernames the current user is following
+
+        // Helper function to format timestamp (copied from home.html for consistency)
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Just now';
+            const date = timestamp.toDate(); // Convert Firestore Timestamp to Date object
+            const now = new Date();
+            const diffMs = now - date; // Difference in milliseconds
+
+            const seconds = Math.floor(diffMs / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+
+            const options = { month: 'short', day: 'numeric' };
+            if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+            }
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Function to create the verified tick SVG element (copied from home.html)
+        function createVerifiedTickSvg() {
+            const svgString = `<svg class="verified-tick" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+            </svg>`;
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
+            return svgDoc.documentElement;
+        }
+
+        // Function to fetch current user's following list (copied from home.html)
+        async function fetchFollowingList(userId) {
+            if (!userId) return;
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    following = new Set(userData.following || []);
+                } else {
+                    following = new Set();
+                }
+            } catch (error) {
+                console.error("Error fetching following list:", error);
+            }
+        }
+
+        // Function to handle follow/unfollow action (modified for consistency)
+        async function toggleFollow(targetUsername, targetUserId, buttonElement, notificationId = null) {
+            if (!currentUserId || !currentUsername) {
+                alert("You must be logged in to follow/unfollow users.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (targetUsername === currentUsername) {
+                alert("You cannot follow or unfollow yourself.");
+                return;
+            }
+
+            const userRef = db.collection('users').doc(currentUserId);
+            const targetUserRef = db.collection('users').doc(targetUserId);
+
+            try {
+                if (following.has(targetUsername)) {
+                    // --- Unfollow Logic ---
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayRemove(targetUsername)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUsername)
+                    });
+                    following.delete(targetUsername);
+                    buttonElement.textContent = 'Follow Back';
+                    buttonElement.classList.remove('unfollow'); // Remove unfollow class
+                    buttonElement.disabled = false; // Enable the button
+
+                    // If it's a notification, mark actionTaken as false
+                    if (notificationId) {
+                        await db.collection('notifications').doc(notificationId).update({
+                            actionTaken: false
+                        });
+                    }
+
+                } else {
+                    // --- Follow Logic ---
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayUnion(targetUsername)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUsername)
+                    });
+                    following.add(targetUsername);
+                    buttonElement.textContent = 'Following';
+                    buttonElement.classList.add('unfollow'); // Add unfollow class
+                    buttonElement.disabled = false; // Keep enabled to allow unfollow
+
+                    // If it's a notification, mark actionTaken as true
+                    if (notificationId) {
+                        await db.collection('notifications').doc(notificationId).update({
+                            actionTaken: true
+                        });
+                    }
+
+                    // Create/update a follow notification (similar to home.html)
+                    try {
+                        const existingNotificationQuery = await db.collection('notifications')
+                            .where('type', '==', 'follow')
+                            .where('fromUserId', '==', currentUserId)
+                            .where('toUserId', '==', targetUserId)
+                            .limit(1)
+                            .get();
+
+                        if (!existingNotificationQuery.empty) {
+                            const existingNotificationDoc = existingNotificationQuery.docs[0];
+                            await existingNotificationDoc.ref.update({
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false,
+                                actionTaken: false // Re-enable for the *other* user if they unfollowed then re-followed
+                            });
+                        } else {
+                            await db.collection('notifications').add({
+                                type: 'follow',
+                                fromUsername: currentUsername,
+                                fromUserId: currentUserId,
+                                toUsername: targetUsername,
+                                toUserId: targetUserId,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false,
+                                actionTaken: false
+                            });
+                        }
+                    } catch (notificationError) {
+                        console.error("Error handling follow notification (create/update):", notificationError);
+                    }
+                }
+            } catch (error) {
+                console.error("Error toggling follow status:", error);
+                alert("Failed to update follow status. Please try again.");
+            }
+        }
+
+        // Function to fetch and display notifications
+        async function fetchAndDisplayNotifications() {
+            notificationsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">Loading notifications...</p>';
+            if (!currentUserId) {
+                notificationsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">Please log in to see notifications.</p>';
+                return;
+            }
+
+            try {
+                const notificationsSnapshot = await db.collection('notifications')
+                    .where('toUserId', '==', currentUserId)
+                    .orderBy('timestamp', 'desc')
+                    .get();
+
+                notificationsFeed.innerHTML = ''; // Clear loading message
+
+                if (notificationsSnapshot.empty) {
+                    notificationsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">No new notifications.</p>';
+                    return;
+                }
+
+                const userPromises = [];
+                notificationsSnapshot.docs.forEach(doc => {
+                    const notification = doc.data();
+                    userPromises.push(db.collection('users').doc(notification.fromUserId).get());
+                });
+
+                const userDocs = await Promise.all(userPromises);
+                const usersData = {};
+                userDocs.forEach(userDoc => {
+                    if (userDoc.exists) {
+                        usersData[userDoc.id] = userDoc.data();
+                    }
+                });
+
+                notificationsSnapshot.forEach(async doc => {
+                    const notification = { id: doc.id, ...doc.data() };
+                    const notificationCard = document.createElement('div');
+                    notificationCard.classList.add('notification-card');
+                    if (!notification.read) {
+                        notificationCard.classList.add('unread');
+                    }
+
+                    // Mark notification as read when displayed
+                    if (!notification.read) {
+                        try {
+                            await db.collection('notifications').doc(notification.id).update({ read: true });
+                        } catch (error) {
+                            console.error("Error marking notification as read:", error);
+                        }
+                    }
+
+                    // --- Profile Picture / First Letter ---
+                    const profilePicContainer = document.createElement('div');
+                    profilePicContainer.classList.add('profile-pic-container');
+
+                    const fromUserData = usersData[notification.fromUserId];
+                    const isFromUserVerified = fromUserData?.isVerified || false;
+                    if (fromUserData && fromUserData.profilePictureUrl) {
+                        const profilePicImg = document.createElement('img');
+                        profilePicImg.src = fromUserData.profilePictureUrl;
+                        profilePicImg.alt = `${notification.fromUsername}'s profile picture`;
+                        profilePicContainer.appendChild(profilePicImg);
+                    } else {
+                        const firstLetter = document.createElement('span');
+                        firstLetter.textContent = notification.fromUsername ? notification.fromUsername.charAt(0).toUpperCase() : '?';
+                        profilePicContainer.appendChild(firstLetter);
+                    }
+                    notificationCard.appendChild(profilePicContainer);
+
+
+                    const notificationContent = document.createElement('div');
+                    notificationContent.classList.add('notification-content');
+
+                    const textSpan = document.createElement('span');
+                    textSpan.innerHTML = `<span class="username">${notification.fromUsername}</span> `;
+
+                    if (isFromUserVerified) {
+                        textSpan.appendChild(createVerifiedTickSvg());
+                    }
+
+                    // --- Conditional Notification Text based on Type ---
+                    if (notification.type === 'follow') {
+                        textSpan.innerHTML += `started following you.`;
+                        // Attach click listener for follow card to view their profile
+                        notificationCard.addEventListener('click', () => {
+                            window.location.href = `profile.html?userId=${notification.fromUserId}`;
+                        });
+                    } else if (notification.type === 'like') {
+                        textSpan.innerHTML += `liked your peep: "${notification.tweetContent}"`;
+                        // Optionally, add a click listener to go to the liked peep
+                        notificationCard.addEventListener('click', () => { window.location.href = `home.html?peepId=${notification.tweetId}`; });
+                    } else if (notification.type === 'reply') {
+                        textSpan.innerHTML += `replied to your peep: "${notification.replyContent}"`;
+                        // Optionally, add a click listener to go to the replied peep
+                        notificationCard.addEventListener('click', () => { window.location.href = `home.html?peepId=${notification.tweetId}`; });
+                    } else if (notification.type === 'repost') { // New: Repost notification type
+                        textSpan.innerHTML += `reposted your peep: "${notification.tweetContent}"`;
+                        // Optionally, add a click listener to go to the reposted peep
+                        notificationCard.addEventListener('click', () => { window.location.href = `home.html?peepId=${notification.tweetId}`; });
+                    }
+                    else if (notification.type === 'chat') {
+                        textSpan.innerHTML += `sent you a new message: "${notification.content}"`;
+                        // Add click listener for chat notifications
+                        notificationCard.addEventListener('click', () => {
+                            window.location.href = `chat.html?targetUserId=${notification.fromUserId}&targetUsername=${encodeURIComponent(notification.fromUsername)}`;
+                        });
+                    }
+
+                    notificationContent.appendChild(textSpan);
+
+                    const timestampSpan = document.createElement('span');
+                    timestampSpan.classList.add('timestamp');
+                    timestampSpan.textContent = formatTimestamp(notification.timestamp);
+                    notificationContent.appendChild(timestampSpan);
+
+
+                    notificationCard.appendChild(notificationContent);
+
+                    // Add "Follow Back" / "Following" button for follow notifications
+                    if (notification.type === 'follow') {
+                        const followBackButton = document.createElement('button');
+                        followBackButton.classList.add('follow-back-btn');
+                        followBackButton.dataset.fromUsername = notification.fromUsername;
+                        followBackButton.dataset.fromUserId = notification.fromUserId;
+                        followBackButton.dataset.notificationId = notification.id;
+
+                        // Check current follow status and set button text/class
+                        if (following.has(notification.fromUsername)) {
+                            followBackButton.textContent = 'Following';
+                            followBackButton.classList.add('unfollow'); // Now uses 'unfollow' class for red background
+                        } else {
+                            followBackButton.textContent = 'Follow Back';
+                            followBackButton.classList.remove('unfollow');
+                        }
+
+                        // Add event listener for the follow back/unfollow button
+                        followBackButton.addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent card click from firing
+                            toggleFollow(
+                                notification.fromUsername,
+                                notification.fromUserId,
+                                followBackButton,
+                                notification.id
+                            );
+                        });
+                        notificationCard.appendChild(followBackButton);
+                    }
+                    notificationsFeed.appendChild(notificationCard);
+                });
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+                notificationsFeed.innerHTML = '<p style="text-align: center; color: red;">Error loading notifications. Please try again.</p>';
+            }
+        }
+
+
+        // Check authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists && userDoc.data().username) {
+                        currentUsername = userDoc.data().username;
+                    } else {
+                        const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
+                        if (!usernameQuery.empty) {
+                            currentUsername = usernameQuery.docs[0].id;
+                        } else {
+                            window.location.href = 'index.html';
+                            return;
+                        }
+                    }
+
+                    await fetchFollowingList(currentUserId);
+                    fetchAndDisplayNotifications();
+                } catch (error) {
+                    console.error("Error fetching user data or notifications:", error);
+                    window.location.href = 'index.html';
+                }
+
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

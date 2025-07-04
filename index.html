@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Clone</title>
+    <style>
+        /* --- CSS Styling --- */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+
+        /* Logo styling */
+        .logo {
+            width: 80px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #1da1f2;
+            margin-bottom: 30px;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #1da1f2;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #0d8ddb;
+        }
+
+        .link {
+            color: #1da1f2;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .link:hover {
+            color: #0d8ddb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        #dashboard-section {
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #user-info {
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* Mobile-specific adjustments for portrait mode */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+                margin: 0 10px;
+            }
+
+            input[type="email"],
+            input[type="password"],
+            input[type="text"],
+            button {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #1da1f2;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* --- Ban Modal Styles --- */
+        .ban-modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1001; /* Sit on top, above loading screen */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6); /* Black w/ more opacity */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .ban-modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            text-align: center;
+            position: relative;
+        }
+        .ban-modal-content h3 {
+            color: #e74c3c; /* Red */
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .ban-modal-message {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .ban-modal-close-btn {
+            background-color: #1da1f2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        .ban-modal-close-btn:hover {
+            background-color: #0d8ddb;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+
+    <div class="container">
+        <div id="auth-section">
+            <img src="bird.png" alt="Twitter Clone Logo" class="logo">
+
+            <div id="login-form-container" class="form-container">
+                <h2>Login</h2>
+                <input type="email" id="login-email" placeholder="Email">
+                <input type="password" id="login-password" placeholder="Password">
+                <button id="login-btn">Login</button>
+                <p>Don't have an account? <span class="link" id="show-register">Register here</span></p>
+                <p id="login-error" class="error-message"></p>
+            </div>
+
+            <div id="register-form-container" class="form-container hidden">
+                <h2>Register</h2>
+                <input type="email" id="register-email" placeholder="Email">
+                <input type="password" id="register-password" placeholder="Password">
+                <button id="register-btn">Register</button>
+                <p>Already have an account? <span class="link" id="show-login">Login here</span></p>
+                <p id="register-error" class="error-message"></p>
+            </div>
+        </div>
+
+        <div id="username-section" class="hidden">
+            <h2>Set Your Username</h2>
+            <input type="text" id="username-input" placeholder="Enter your username">
+            <button id="save-username-btn">Save Username</button>
+            <p id="username-error" class="error-message"></p>
+        </div>
+
+        <div id="dashboard-section" class="hidden">
+            <h2>Welcome to Twitter Clone!</h2>
+            <p id="user-info"></p>
+            <button id="logout-btn">Logout</button>
+        </div>
+    </div>
+
+    <div id="ban-popup-modal" class="ban-modal" style="display: none;">
+        <div class="ban-modal-content">
+            <h3>Account Banned</h3>
+            <p id="ban-popup-message" class="ban-modal-message"></p>
+            <button id="ban-popup-close-btn" class="ban-modal-close-btn">OK</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        /* --- JavaScript Logic --- */
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Get elements
+        const authSection = document.getElementById('auth-section');
+        const loginFormContainer = document.getElementById('login-form-container');
+        const registerFormContainer = document.getElementById('register-form-container');
+        const usernameSection = document.getElementById('username-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const loadingScreen = document.getElementById('loading-screen');
+
+        const loginEmail = document.getElementById('login-email');
+        const loginPassword = document.getElementById('login-password');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+
+        const registerEmail = document.getElementById('register-email');
+        const registerPassword = document.getElementById('register-password');
+        const registerBtn = document.getElementById('register-btn');
+        const registerError = document.getElementById('register-error');
+
+        const showRegisterLink = document.getElementById('show-register');
+        const showLoginLink = document.getElementById('show-login');
+
+        const usernameInput = document.getElementById('username-input');
+        const saveUsernameBtn = document.getElementById('save-username-btn');
+        const usernameError = document.getElementById('username-error');
+
+        const userInfo = document.getElementById('user-info');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Ban Modal elements
+        const banPopupModal = document.getElementById('ban-popup-modal');
+        const banPopupMessage = document.getElementById('ban-popup-message');
+        const banPopupCloseBtn = document.getElementById('ban-popup-close-btn');
+
+        let currentUser = null; // To store the currently logged-in user
+
+        // --- Loading Screen Functions ---
+        function showLoadingScreen() {
+            loadingScreen.style.display = 'flex';
+        }
+
+        function hideLoadingScreen() {
+            loadingScreen.style.display = 'none';
+        }
+
+        // --- UI Toggle Functions ---
+        function showLoginForm() {
+            loginFormContainer.classList.remove('hidden');
+            registerFormContainer.classList.add('hidden');
+            loginError.textContent = '';
+            registerError.textContent = '';
+            // We don't touch the ban popup here, it's controlled independently
+        }
+
+        function showRegisterForm() {
+            registerFormContainer.classList.remove('hidden');
+            loginFormContainer.classList.add('hidden');
+            loginError.textContent = '';
+            registerError.textContent = '';
+            // We don't touch the ban popup here, it's controlled independently
+        }
+
+        function showUsernameSection() {
+            authSection.classList.add('hidden');
+            dashboardSection.classList.add('hidden');
+            usernameSection.classList.remove('hidden');
+            usernameInput.value = '';
+            usernameError.textContent = '';
+            hideLoadingScreen();
+            closeBanPopup(); // Ensure ban popup is closed if user proceeds
+        }
+
+        function showAuthSection() {
+            authSection.classList.remove('hidden');
+            loginFormContainer.classList.remove('hidden');
+            registerFormContainer.classList.add('hidden');
+            usernameSection.classList.add('hidden');
+            dashboardSection.classList.add('hidden');
+            loginEmail.value = '';
+            loginPassword.value = '';
+            registerEmail.value = '';
+            registerPassword.value = '';
+            loginError.textContent = '';
+            registerError.textContent = '';
+            // We do NOT call closeBanPopup() here, as it might be shown by checkIfBanned
+            // It will only be closed by the user clicking OK or a successful login
+            hideLoadingScreen();
+        }
+
+        // --- Redirection Logic ---
+        function redirectToHome() {
+            window.location.href = 'home.html';
+        }
+
+        // --- Ban Popup Functions ---
+        function showBanPopup(message) {
+            banPopupMessage.textContent = message;
+            banPopupModal.style.display = 'flex'; // Use flex to center the modal
+        }
+
+        function closeBanPopup() {
+            banPopupModal.style.display = 'none';
+            banPopupMessage.textContent = ''; // Clear message
+        }
+
+        // Event listener for the ban modal close button
+        banPopupCloseBtn.addEventListener('click', closeBanPopup);
+
+        // --- Removed the event listener for clicking outside the modal ---
+        // banPopupModal.addEventListener('click', (event) => {
+        //     if (event.target === banPopupModal) {
+        //         closeBanPopup();
+        //     }
+        // });
+
+        // --- Ban Logic ---
+        async function checkIfBanned(userId) {
+            try {
+                const banDoc = await db.collection('bannedUsers').doc(userId).get();
+
+                if (banDoc.exists) {
+                    const banData = banDoc.data();
+                    const now = new Date();
+                    const banEndsAt = banData.banEndsAt ? banData.banEndsAt.toDate() : null;
+
+                    if (banData.banType === 'permanent' || (banEndsAt && now < banEndsAt)) {
+                        let banMessage = 'You have been banned for unusual activity.';
+                        if (banEndsAt && banData.banType !== 'permanent') {
+                            const remainingTimeMs = banEndsAt.getTime() - now.getTime();
+                            const remainingDays = Math.ceil(remainingTimeMs / (1000 * 60 * 60 * 24));
+                            if (remainingDays > 0) {
+                                banMessage += ` Your ban ends in ${remainingDays} day(s).`;
+                            } else {
+                                banMessage += ` Your ban ends shortly.`;
+                            }
+                        } else if (banData.banType === 'permanent') {
+                            banMessage += ' This is a permanent ban.';
+                        }
+                        showBanPopup(banMessage); // Show ban message in the popup
+                        return true; // User is banned
+                    } else if (banEndsAt && now >= banEndsAt && banData.banType !== 'permanent') {
+                        // Ban period has expired, remove the ban record (clean up)
+                        console.log(`Ban for user ${userId} expired. Removing ban record.`);
+                        await db.collection('bannedUsers').doc(userId).delete();
+                        return false; // Ban expired, not banned anymore
+                    }
+                }
+                return false; // Not banned
+            } catch (error) {
+                console.error("Error checking ban status:", error);
+                hideLoadingScreen();
+                return false; // Assume not banned in case of error
+            }
+        }
+
+        // --- Event Listeners ---
+        showRegisterLink.addEventListener('click', showRegisterForm);
+        showLoginLink.addEventListener('click', showLoginForm);
+
+        loginBtn.addEventListener('click', async () => {
+            const email = loginEmail.value;
+            const password = loginPassword.value;
+            loginError.textContent = '';
+            // Do NOT call closeBanPopup() here directly, as it might be open from a previous attempt
+            showLoadingScreen();
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                currentUser = userCredential.user;
+
+                const isBanned = await checkIfBanned(currentUser.uid);
+                if (isBanned) {
+                    await auth.signOut();
+                    currentUser = null;
+                    hideLoadingScreen();
+                    showAuthSection(); // Show auth section (login form), ban popup will remain visible until OK clicked
+                    return;
+                }
+
+                closeBanPopup(); // If login is successful and not banned, close any existing ban popup
+                await checkUserUsernameAndRedirect(currentUser);
+            } catch (error) {
+                loginError.textContent = error.message;
+                hideLoadingScreen();
+                // If login fails (e.g., wrong password), we don't automatically close the ban popup
+                // if it was already showing due to a ban.
+            }
+        });
+
+        registerBtn.addEventListener('click', async () => {
+            const email = registerEmail.value;
+            const password = registerPassword.value;
+            registerError.textContent = '';
+            // Do NOT call closeBanPopup() here directly
+            showLoadingScreen();
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                currentUser = userCredential.user;
+
+                const isBanned = await checkIfBanned(currentUser.uid);
+                if (isBanned) {
+                    await auth.signOut();
+                    currentUser = null;
+                    hideLoadingScreen();
+                    showAuthSection(); // Show auth section, ban popup will remain visible until OK clicked
+                    return;
+                }
+
+                closeBanPopup(); // If registration is successful and not banned, close any existing ban popup
+                showUsernameSection();
+            } catch (error) {
+                registerError.textContent = error.message;
+                hideLoadingScreen();
+            }
+        });
+
+        saveUsernameBtn.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
+            usernameError.textContent = '';
+            showLoadingScreen();
+
+            if (!username) {
+                usernameError.textContent = 'Username cannot be empty.';
+                hideLoadingScreen();
+                return;
+            }
+
+            if (currentUser) {
+                try {
+                    const usernameRef = db.collection('usernames').doc(username);
+                    const doc = await usernameRef.get();
+
+                    if (doc.exists) {
+                        usernameError.textContent = 'This username is already taken. Please choose another one.';
+                        hideLoadingScreen();
+                        return;
+                    }
+
+                    await db.collection('usernames').doc(username).set({
+                        userId: currentUser.uid,
+                        email: currentUser.email
+                    });
+
+                    await currentUser.updateProfile({
+                        displayName: username
+                    });
+
+                    closeBanPopup(); // Ensure modal is closed before redirect
+                    redirectToHome();
+                } catch (error) {
+                    usernameError.textContent = 'Error saving username: ' + error.message;
+                    hideLoadingScreen();
+                }
+            } else {
+                usernameError.textContent = 'No user logged in to set username.';
+                showAuthSection();
+                hideLoadingScreen();
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                currentUser = null;
+                showAuthSection(); // After logout, show auth section. closeBanPopup is implicitly handled by showAuthSection.
+            } catch (error) {
+                console.error("Error logging out:", error);
+            }
+        });
+
+        // --- Firebase Auth State Observer ---
+        showLoadingScreen();
+
+        auth.onAuthStateChanged(async user => {
+            if (user) {
+                currentUser = user;
+                // DO NOT closeBanPopup() here directly. It will be closed on successful *action* (login, register)
+                // or after the user clicks OK on the ban popup if they were indeed banned.
+
+                const isBanned = await checkIfBanned(currentUser.uid);
+                if (isBanned) {
+                    await auth.signOut();
+                    currentUser = null;
+                    hideLoadingScreen();
+                    showAuthSection(); // Show auth section, the ban popup will remain visible
+                    return;
+                }
+
+                // If user is logged in and NOT banned, then close any lingering ban popup
+                closeBanPopup();
+                await checkUserUsernameAndRedirect(user);
+            } else {
+                currentUser = null;
+                showAuthSection(); // When logged out, show auth section and ensure no ban popup is visible
+            }
+        });
+
+        // --- Check if user has a username and redirect if yes ---
+        async function checkUserUsernameAndRedirect(user) {
+            try {
+                const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
+                if (!usernameQuery.empty) {
+                    redirectToHome();
+                } else {
+                    showUsernameSection();
+                }
+            } catch (error) {
+                console.error("Error checking username:", error);
+                hideLoadingScreen();
+                showUsernameSection();
+            }
+        }
+    </script>
+</body>
+</html>

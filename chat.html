@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Twitter Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            /* Define CSS variables for consistent heights */
+            --header-height: 50px; /* Approximate height of your header */
+            --footer-height: 55px; /* Approximate height of your footer */
+            --input-area-height: 70px; /* Height of the input area (padding + input height) */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            overflow-y: hidden; /* Prevent body itself from scrolling - we control scrolling with chat-box */
+            position: relative;
+        }
+
+        .header {
+            background-color: #1da1f2;
+            color: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            height: var(--header-height); /* Set header height explicitly */
+        }
+
+        .header .back-btn {
+            color: white;
+            font-size: 24px;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+
+        .header .chat-with-username {
+            font-size: 17px;
+            font-weight: bold;
+            color: white;
+            flex-grow: 1;
+            text-align: center;
+            margin-right: 39px;
+        }
+
+        /* --- Main content area that will house the scrollable chat --- */
+        .main-content {
+            flex-grow: 1; /* This container takes all available space */
+            display: flex; /* Make it a flex container */
+            flex-direction: column; /* Stack chat-box vertically */
+            width: 100%;
+            max-width: 450px; /* Limit overall width */
+            margin: 0 auto; /* Center the container */
+            padding-left: 15px; /* Horizontal padding */
+            padding-right: 15px; /* Horizontal padding */
+            box-sizing: border-box;
+            /* Occupy the space between header and the combined input/footer area */
+            height: calc(100vh - var(--header-height) - var(--input-area-height) - var(--footer-height));
+            margin-top: 15px; /* Adjust spacing below header */
+        }
+
+        .chat-box {
+            flex-grow: 1; /* Chat box expands to fill available height within main-content */
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            /* Crucial: Add padding at the bottom equal to the height of the fixed input + footer area */
+            /* Or slightly more than the input area's height if footer is separate. */
+            /* Let's try to make it just enough to clear the input area */
+            padding-bottom: var(--input-area-height); /* This is the key change */
+            overflow-y: auto; /* This is the only scrollable part */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 15px; /* Ensure top padding */
+        }
+
+        /* --- Fixed Message Input Area --- */
+        .message-input-area {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px; /* Original padding */
+            background-color: #ffffff;
+            border-top: 1px solid #eee;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 450px; /* Match main content width */
+            margin: 0 auto; /* Center it */
+            box-sizing: border-box;
+
+            position: fixed; /* Fixed relative to the viewport */
+            bottom: var(--footer-height); /* Position right above the footer */
+            left: 0;
+            right: 0;
+            z-index: 999;
+            /* Calculate input area height precisely for the CSS variable */
+            /* This will be 10px (top padding) + 10px (bottom padding) + 1px (border) + content height (approx 20px-24px for input text) */
+            /* Let's set it based on actual content to be safe. */
+            /* The --input-area-height variable will be used to offset the chat-box padding */
+        }
+        /* Refine the actual input height for calculation purposes */
+        .message-input-area input[type="text"] {
+            width: calc(100% - 50px);
+            padding: 10px 15px;
+            padding-right: 45px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 16px;
+            outline: none;
+            line-height: 20px; /* Helps define content height */
+            height: 20px; /* Explicit height for content inside input */
+        }
+
+        .message-input-area button {
+            background: none;
+            border: none;
+            color: #1da1f2;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .message-input-area button:hover {
+            color: #0d8ddb;
+        }
+
+        /* Message styling (kept as is) */
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            word-wrap: break-word;
+            font-size: 15px;
+        }
+
+        .message.sent {
+            background-color: #e0f7fa;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .message.received {
+            background-color: #f1f0f0;
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .message-details {
+            display: flex;
+            align-items: center;
+            font-size: 10px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .message.sent + .message-details {
+            align-self: flex-end;
+            margin-right: 5px;
+        }
+
+        .message.received + .message-details {
+            align-self: flex-start;
+            margin-left: 5px;
+        }
+
+        .message-details .timestamp {
+            margin-right: 5px;
+        }
+
+        .message-details .seen-icon {
+            color: #ccc;
+        }
+
+        .message-details .seen-icon.blue {
+            color: #1da1f2;
+        }
+
+        /* --- Footer Styling --- */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            padding: 8px 0;
+            width: 100%;
+            position: fixed; /* Fixed relative to the viewport */
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            height: var(--footer-height); /* Set footer height explicitly */
+        }
+
+        .footer-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #66757f;
+            text-decoration: none;
+            font-size: 11px;
+            transition: color 0.2s ease-in-out;
+            padding: 5px 0;
+            flex: 1;
+            min-width: 0;
+            position: relative;
+        }
+
+        .footer-icon i {
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+
+        .footer-icon:hover,
+        .footer-icon.active {
+            color: #1da1f2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 18px;
+            background-color: #e0245e;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            min-width: 12px;
+            text-align: center;
+            display: none;
+            transform: translate(50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="message.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <span class="chat-with-username" id="chat-with-username">Loading Chat...</span>
+    </header>
+
+    <div class="main-content">
+        <div class="chat-box" id="chat-box">
+            <p style="text-align: center; color: #66757f;">Start chatting!</p>
+        </div>
+    </div>
+
+    <div class="message-input-area">
+        <div class="message-input-wrapper">
+            <input type="text" id="message-input" placeholder="Type a message...">
+            <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <a href="home.html" class="footer-icon">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="footer-icon">
+            <i class="fas fa-search"></i>
+            <span>Search</span>
+        </a>
+        <a href="notifications.html" class="footer-icon" id="notifications-link">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+            <span class="notification-badge" id="notification-badge"></span>
+        </a>
+        <a href="profile.html" class="footer-icon">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase configuration (same as home.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Get elements
+        const chatWithUsernameElement = document.getElementById('chat-with-username');
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const notificationBadge = document.getElementById('notification-badge');
+
+        let currentUserId = null;
+        let currentUsername = null;
+        let targetUserId = null;
+        let targetUsername = null;
+        let chatCollectionId = null;
+
+        // Function to parse query parameters
+        function getQueryParams() {
+            const params = {};
+            window.location.search.substring(1).split('&').forEach(param => {
+                const parts = param.split('=');
+                params[parts[0]] = decodeURIComponent(parts[1]);
+            });
+            return params;
+        }
+
+        // Helper function to format timestamp
+        function formatMessageTimestamp(timestamp) {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            const now = new Date();
+
+            const isToday = date.getDate() === now.getDate() &&
+                            date.getMonth() === now.getMonth() &&
+                            date.getFullYear() === now.getFullYear();
+
+            const isYesterday = (date.getDate() === now.getDate() - 1) &&
+                                 date.getMonth() === now.getMonth() &&
+                                 date.getFullYear() === now.getFullYear();
+
+            if (isToday) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else if (isYesterday) {
+                return 'Yesterday ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' +
+                       date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+
+        // Function to display a message in the chat box
+        function displayMessage(message, isSentByCurrentUser, docId) {
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container');
+            messageContainer.dataset.messageId = docId; // Store document ID for updates
+
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isSentByCurrentUser ? 'sent' : 'received');
+            messageDiv.textContent = message.content;
+            messageContainer.appendChild(messageDiv);
+
+            const messageDetailsDiv = document.createElement('div');
+            messageDetailsDiv.classList.add('message-details');
+
+            const timestampSpan = document.createElement('span');
+            timestampSpan.classList.add('timestamp');
+            timestampSpan.textContent = formatMessageTimestamp(message.timestamp);
+            messageDetailsDiv.appendChild(timestampSpan);
+
+            if (isSentByCurrentUser) {
+                const seenIcon = document.createElement('i');
+                seenIcon.classList.add('fas', 'fa-check-double', 'seen-icon');
+                if (message.read) {
+                    seenIcon.classList.add('blue');
+                }
+                messageDetailsDiv.appendChild(seenIcon);
+            }
+            messageContainer.appendChild(messageDetailsDiv);
+
+            chatBox.appendChild(messageContainer);
+        }
+
+        // Function to mark messages as read
+        async function markMessagesAsRead() {
+            if (!currentUserId || !targetUserId || !chatCollectionId) return;
+
+            try {
+                const unreadMessagesSnapshot = await db.collection('chats').doc(chatCollectionId).collection('messages')
+                    .where('senderId', '==', targetUserId)
+                    .where('receiverId', '==', currentUserId)
+                    .where('read', '==', false)
+                    .get();
+
+                if (!unreadMessagesSnapshot.empty) {
+                    const batch = db.batch();
+                    unreadMessagesSnapshot.docs.forEach(doc => {
+                        batch.update(doc.ref, { read: true });
+                    });
+                    await batch.commit();
+                    console.log(`Marked ${unreadMessagesSnapshot.docs.length} messages as read from ${targetUsername}`);
+                }
+
+                const chatNotificationsSnapshot = await db.collection('notifications')
+                    .where('type', '==', 'chat')
+                    .where('fromUserId', '==', targetUserId)
+                    .where('toUserId', '==', currentUserId)
+                    .where('read', '==', false)
+                    .get();
+
+                if (!chatNotificationsSnapshot.empty) {
+                    const notificationBatch = db.batch();
+                    chatNotificationsSnapshot.docs.forEach(doc => {
+                        notificationBatch.update(doc.ref, { read: true });
+                    });
+                    await notificationBatch.commit();
+                    console.log(`Cleared ${chatNotificationsSnapshot.docs.length} chat notifications from ${targetUsername}`);
+                }
+
+            } catch (error) {
+                console.error("Error marking messages as read or clearing notifications:", error);
+            }
+        }
+
+        // Function to fetch and display chat messages
+        function fetchAndDisplayMessages(user1Id, user2Id) {
+            chatBox.innerHTML = '<p style="text-align: center; color: #66757f;">Loading messages...</p>';
+
+            chatCollectionId = user1Id < user2Id ? `${user1Id}_${user2Id}` : `${user2Id}_${user1Id}`;
+
+            db.collection('chats').doc(chatCollectionId).collection('messages')
+                .orderBy('timestamp', 'asc')
+                .onSnapshot(snapshot => {
+                    const shouldScroll = chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 20;
+
+                    snapshot.docChanges().forEach(change => {
+                        const message = change.doc.data();
+                        const isSentByCurrentUser = message.senderId === currentUserId;
+
+                        if (change.type === 'added') {
+                            if (chatBox.querySelector('p[style*="loading messages"]')) {
+                                chatBox.innerHTML = '';
+                            } else if (chatBox.querySelector('p[style*="No messages yet"]')) {
+                                chatBox.innerHTML = '';
+                            }
+                            displayMessage(message, isSentByCurrentUser, change.doc.id);
+                        } else if (change.type === 'modified') {
+                            const messageElement = chatBox.querySelector(`[data-message-id="${change.doc.id}"]`);
+                            if (messageElement && isSentByCurrentUser) {
+                                const seenIcon = messageElement.querySelector('.seen-icon');
+                                if (seenIcon && message.read) {
+                                    seenIcon.classList.add('blue');
+                                }
+                            }
+                        }
+                    });
+
+                    if (shouldScroll || snapshot.docChanges().some(change => change.type === 'added')) {
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+
+                    setTimeout(markMessagesAsRead, 500);
+
+                }, error => {
+                    console.error("Error fetching messages:", error);
+                    chatBox.innerHTML = '<p style="text-align: center; color: red;">Error loading messages. Please try again.</p>';
+                });
+        }
+
+        // Function to send a message
+        async function sendMessage() {
+            const messageContent = messageInput.value.trim();
+            if (!messageContent) return;
+
+            if (!currentUserId || !targetUserId || !chatCollectionId) {
+                alert("Cannot send message. User IDs are missing.");
+                return;
+            }
+
+            try {
+                await db.collection('chats').doc(chatCollectionId).collection('messages').add({
+                    senderId: currentUserId,
+                    receiverId: targetUserId,
+                    content: messageContent,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+                messageInput.value = '';
+
+                messageInput.focus();
+
+                await db.collection('chats').doc(chatCollectionId).update({
+                    lastMessage: messageContent,
+                    lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastMessageSenderId: currentUserId
+                }, { merge: true });
+
+
+                try {
+                    const existingChatNotification = await db.collection('notifications')
+                        .where('type', '==', 'chat')
+                        .where('fromUserId', '==', currentUserId)
+                        .where('toUserId', '==', targetUserId)
+                        .where('read', '==', false)
+                        .limit(1)
+                        .get();
+
+                    if (existingChatNotification.empty) {
+                        await db.collection('notifications').add({
+                            type: 'chat',
+                            fromUsername: currentUsername,
+                            fromUserId: currentUserId,
+                            toUsername: targetUsername,
+                            toUserId: targetUserId,
+                            content: messageContent.substring(0, 50) + (messageContent.length > 50 ? '...' : ''),
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            read: false
+                        });
+                        console.log(`New chat notification created for ${targetUsername}`);
+                    } else {
+                        await existingChatNotification.docs[0].ref.update({
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            content: messageContent.substring(0, 50) + (messageContent.length > 50 ? '...' : ''),
+                            read: false
+                        });
+                        console.log(`Updated existing chat notification for ${targetUsername}`);
+                    }
+                } catch (notificationError) {
+                    console.error("Error creating/updating chat notification:", notificationError);
+                }
+
+            } catch (error) {
+                console.error("Error sending message:", error);
+                alert("Failed to send message. Please try again.");
+            }
+        }
+
+        // Event listeners for sending messages
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // --- Notification Badge Logic (copied from home.html) ---
+        function updateNotificationBadge(count) {
+            if (count > 0) {
+                notificationBadge.textContent = count;
+                notificationBadge.style.display = 'block';
+            } else {
+                notificationBadge.textContent = '';
+                notificationBadge.style.display = 'none';
+            }
+        }
+
+        // Listen for real-time updates to notifications (copied from home.html)
+        function setupNotificationListener(userId) {
+            if (!userId) return;
+
+            db.collection('notifications')
+                .where('toUserId', '==', userId)
+                .where('read', '==', false)
+                .onSnapshot(snapshot => {
+                    const unreadCount = snapshot.docs.length;
+                    updateNotificationBadge(unreadCount);
+                }, error => {
+                    console.error("Error listening to notifications:", error);
+                });
+        }
+
+        // Check authentication state and load chat
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                const queryParams = getQueryParams();
+                targetUserId = queryParams.targetUserId;
+                targetUsername = queryParams.targetUsername;
+
+                if (!targetUserId || !targetUsername) {
+                    chatBox.innerHTML = '<p style="text-align: center; color: red;">Error: Target user not specified. Please go back to messages.</p>';
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+                    return;
+                }
+
+                chatWithUsernameElement.textContent = `@${targetUsername}`;
+
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists && userDoc.data().username) {
+                        currentUsername = userDoc.data().username;
+                        fetchAndDisplayMessages(currentUserId, targetUserId);
+                        setupNotificationListener(currentUserId);
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    console.error("Error fetching current user data:", error);
+                    window.location.href = 'index.html';
+                }
+
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

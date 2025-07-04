@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Users - Twitter Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- General Body & Layout --- */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* --- Header Styling (Consistent with other pages) --- */
+        .header {
+            background-color: #1da1f2; /* Twitter Blue */
+            color: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: center; /* Center the title */
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header .welcome-username {
+            font-size: 17px;
+            font-weight: bold;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        /* --- Search Bar Styling --- */
+        .search-container {
+            width: 100%;
+            max-width: 450px;
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            position: relative; /* For positioning the button inside */
+        }
+
+        .search-input {
+            flex-grow: 1;
+            padding: 10px 45px 10px 15px; /* Added right padding for button */
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s ease-in-out;
+            width: 100%; /* Ensure it takes full width within its flex container */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        .search-input:focus {
+            border-color: #1da1f2;
+        }
+
+        .search-button {
+            position: absolute; /* Position button inside the input area */
+            right: 20px; /* Adjust as needed */
+            background-color: transparent; /* Make background transparent */
+            color: #1da1f2; /* Twitter blue color */
+            border: none;
+            padding: 5px; /* Smaller padding */
+            font-size: 18px; /* Icon size */
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 30px; /* Match input height roughly */
+            width: 30px; /* Make it square */
+            border-radius: 50%; /* Make it round */
+        }
+
+        .search-button:hover {
+            color: #0d8ddb;
+            background-color: #e8f5fe; /* Light hover effect */
+        }
+
+        .search-button i {
+            pointer-events: none; /* Prevent icon from interfering with button click */
+        }
+
+        .search-results {
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+
+        .user-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-card .profile-pic-container {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ddd;
+            color: #555;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .user-card .profile-pic-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-info .username {
+            font-weight: bold;
+            color: #1da1f2;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Style for the clickable username link */
+        .user-info .username a {
+            color: #1da1f2; /* Twitter blue */
+            text-decoration: none; /* Remove underline */
+            transition: color 0.2s ease-in-out;
+        }
+
+        .user-info .username a:hover {
+            color: #0d8ddb; /* Darker blue on hover */
+            text-decoration: underline; /* Underline on hover */
+        }
+
+
+        .verified-badge {
+            width: 16px; /* Adjust size as needed */
+            height: 16px; /* Adjust size as needed */
+            fill: #1da1f2; /* Twitter blue */
+            vertical-align: middle; /* Align with text */
+            flex-shrink: 0;
+        }
+
+        .user-info .name {
+            color: #66757f;
+            font-size: 14px;
+        }
+
+        .follow-toggle-btn {
+            background-color: #1da1f2;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .follow-toggle-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        .follow-toggle-btn.unfollow {
+            background-color: #e0245e; /* Red for unfollow */
+        }
+
+        .follow-toggle-btn.unfollow:hover {
+            background-color: #c71c4c;
+        }
+
+        .follow-toggle-btn.following-disabled {
+            background-color: #cccccc; /* Grey for 'Following' when disabled for further action */
+            cursor: not-allowed;
+        }
+
+        .follow-toggle-btn:disabled:not(.following-disabled) {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .message-container {
+            text-align: center;
+            color: #66757f;
+            margin-top: 20px;
+        }
+
+        /* --- Footer Styling (Consistent with other pages) --- */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            padding: 8px 0;
+            width: 100%;
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        .footer-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #66757f;
+            text-decoration: none;
+            font-size: 11px;
+            transition: color 0.2s ease-in-out;
+            padding: 5px 0;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .footer-icon i {
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+
+        .footer-icon:hover,
+        .footer-icon.active {
+            color: #1da1f2;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        /* Basic adjustments for smaller screens if needed, but current design is already quite responsive */
+        @media (max-width: 600px) {
+            .search-container {
+                padding: 10px; /* Slightly less padding on small screens */
+            }
+
+            .search-input {
+                font-size: 15px; /* Slightly smaller font */
+                padding: 8px 40px 8px 12px; /* Adjust padding for smaller input and button */
+            }
+
+            .search-button {
+                right: 15px; /* Adjust button position */
+                font-size: 16px; /* Smaller icon */
+                width: 28px;
+                height: 28px;
+            }
+
+            .user-card {
+                padding: 12px; /* Slightly less padding on user cards */
+            }
+
+            .user-card .profile-pic-container {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .user-info .username {
+                font-size: 15px;
+            }
+
+            .user-info .name {
+                font-size: 13px;
+            }
+
+            .follow-toggle-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <span id="header-title" class="welcome-username">Search Users</span>
+    </header>
+
+    <div class="main-content">
+        <div class="search-container">
+            <input type="text" id="search-input" class="search-input" placeholder="Search by username...">
+            <button id="search-button" class="search-button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+
+        <div class="search-results" id="search-results">
+            <p class="message-container" id="initial-message">Enter a username to search.</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <a href="home.html" class="footer-icon">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="footer-icon active">
+            <i class="fas fa-search"></i>
+            <span>Search</span>
+        </a>
+        <a href="notifications.html" class="footer-icon">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+        </a>
+        <a href="profile.html" class="footer-icon">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase configuration (same as other pages)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Get elements
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const searchResultsDiv = document.getElementById('search-results');
+        const initialMessage = document.getElementById('initial-message');
+
+        let currentUsername = null;
+        let currentUserId = null;
+        let following = new Set(); // Store usernames of users the current user is following
+
+        // Function to fetch current user's following list
+        async function fetchFollowingList(userId) {
+            if (!userId) {
+                console.warn("fetchFollowingList called with no userId.");
+                return;
+            }
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    following = new Set(userData.following || []);
+                    console.log("Current user following:", Array.from(following));
+                } else {
+                    following = new Set();
+                    console.log("User doc not found for following list.");
+                }
+            } catch (error) {
+                console.error("Error fetching following list:", error);
+            }
+        }
+
+        // Function to handle follow/unfollow action
+        async function toggleFollow(targetUsername, targetUserId, buttonElement) {
+            if (!currentUserId || !currentUsername) {
+                alert("You must be logged in to follow/unfollow users.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (targetUsername === currentUsername) {
+                alert("You cannot follow or unfollow yourself.");
+                return;
+            }
+
+            const userRef = db.collection('users').doc(currentUserId);
+            const targetUserRef = db.collection('users').doc(targetUserId);
+
+            try {
+                if (following.has(targetUsername)) {
+                    // Unfollow logic
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayRemove(targetUsername)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUsername)
+                    });
+                    following.delete(targetUsername);
+                    buttonElement.textContent = 'Follow';
+                    buttonElement.classList.remove('unfollow');
+                    buttonElement.classList.remove('following-disabled');
+                    buttonElement.disabled = false; // Enable for follow click
+                    console.log(`Unfollowed ${targetUsername}`);
+
+                } else {
+                    // Follow logic
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayUnion(targetUsername)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUsername)
+                    });
+                    following.add(targetUsername);
+                    buttonElement.textContent = 'Following';
+                    buttonElement.classList.add('unfollow');
+                    buttonElement.classList.add('following-disabled');
+                    buttonElement.disabled = false; // Enable for unfollow click
+                    console.log(`Followed ${targetUsername}`);
+
+                    // Create a notification for the followed user
+                    await db.collection('notifications').add({
+                        type: 'follow',
+                        fromUsername: currentUsername,
+                        fromUserId: currentUserId,
+                        toUsername: targetUsername,
+                        toUserId: targetUserId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false
+                    });
+                }
+            } catch (error) {
+                console.error("Error toggling follow status:", error);
+                alert("Failed to update follow status. Please try again.");
+            }
+        }
+
+        // Function to perform search
+        async function performSearch() {
+            const searchTerm = searchInput.value.trim();
+            searchResultsDiv.innerHTML = ''; // Clear previous results
+            initialMessage.style.display = 'none'; // Hide initial message
+
+            if (!currentUserId || !currentUsername) {
+                searchResultsDiv.innerHTML = '<p class="message-container">Please log in to search for users.</p>';
+                return;
+            }
+
+            if (searchTerm === '') {
+                searchResultsDiv.innerHTML = '<p class="message-container">Please enter a username to search.</p>';
+                return;
+            }
+
+            searchResultsDiv.innerHTML = '<p class="message-container">Searching...</p>';
+
+            try {
+                // Query the 'users' collection where 'username' starts with the search term
+                // This will require a Firestore index for 'username'
+                const usersSnapshot = await db.collection('users')
+                    .orderBy('username')
+                    .startAt(searchTerm)
+                    .endAt(searchTerm + '\uf8ff') // Unicode character to match all strings starting with searchTerm
+                    .limit(20) // Limit results for performance
+                    .get();
+
+                if (usersSnapshot.empty) {
+                    searchResultsDiv.innerHTML = `<p class="message-container">No users found matching "${searchTerm}".</p>`;
+                    return;
+                }
+
+                searchResultsDiv.innerHTML = ''; // Clear "Searching..." message
+
+                let resultsFound = false;
+                usersSnapshot.forEach(userDoc => {
+                    const userData = userDoc.data();
+                    const userId = userDoc.id; // The UID of the found user
+                    const username = userData.username;
+                    const profilePictureUrl = userData.profilePictureUrl;
+                    const isVerified = userData.isVerified || false; // Assume false if not set
+
+                    // Don't show the current user in search results
+                    if (username === currentUsername) {
+                        return; // Skip current user
+                    }
+
+                    resultsFound = true; // Mark that at least one user (not self) was found
+
+                    const userCard = document.createElement('div');
+                    userCard.classList.add('user-card');
+
+                    // Profile Picture / First Letter
+                    const profilePicContainer = document.createElement('div');
+                    profilePicContainer.classList.add('profile-pic-container');
+                    if (profilePictureUrl) {
+                        const profilePicImg = document.createElement('img');
+                        profilePicImg.src = profilePictureUrl;
+                        profilePicImg.alt = `${username}'s profile picture`;
+                        profilePicContainer.appendChild(profilePicImg);
+                    } else {
+                        const firstLetter = document.createElement('span');
+                        firstLetter.textContent = username.charAt(0).toUpperCase();
+                        profilePicContainer.appendChild(firstLetter);
+                    }
+                    userCard.appendChild(profilePicContainer);
+
+                    const userInfo = document.createElement('div');
+                    userInfo.classList.add('user-info');
+
+                    const usernameSpan = document.createElement('span');
+                    usernameSpan.classList.add('username');
+
+                    // Create an anchor tag for the username
+                    const usernameLink = document.createElement('a');
+                    usernameLink.href = `user_profile.html?username=${username}`; // Link to user_profile.html with username
+                    usernameLink.textContent = `@${username}`;
+                    usernameSpan.appendChild(usernameLink);
+
+                    if (isVerified) {
+                        const verifiedBadge = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        verifiedBadge.setAttribute("viewBox", "0 0 24 24");
+                        verifiedBadge.classList.add("verified-badge");
+                        verifiedBadge.innerHTML = '<path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm3.96 8.22a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-2.5-2.5a.75.75 0 011.06-1.06l1.97 1.97 3.97-3.97a.75.75 0 011.06 0z"></path>';
+                        usernameSpan.appendChild(verifiedBadge);
+                    }
+                    userInfo.appendChild(usernameSpan);
+
+                    if (userData.name) {
+                        const nameSpan = document.createElement('span');
+                        nameSpan.classList.add('name');
+                        nameSpan.textContent = userData.name;
+                        userInfo.appendChild(nameSpan);
+                    }
+                    userCard.appendChild(userInfo);
+
+                    // Follow/Unfollow Button
+                    const followToggleButton = document.createElement('button');
+                    followToggleButton.classList.add('follow-toggle-btn');
+                    followToggleButton.dataset.username = username;
+                    followToggleButton.dataset.userId = userId;
+
+                    // Determine button state: Follow, Following, or Follow Back
+                    if (following.has(username)) {
+                        followToggleButton.textContent = 'Following';
+                        followToggleButton.classList.add('unfollow'); // Red style for 'unfollow'
+                        followToggleButton.classList.remove('following-disabled'); // Allow unfollow click
+                        followToggleButton.disabled = false;
+                    } else {
+                        followToggleButton.textContent = 'Follow';
+                        followToggleButton.classList.remove('unfollow');
+                        followToggleButton.classList.remove('following-disabled');
+                        followToggleButton.disabled = false;
+                    }
+
+                    followToggleButton.addEventListener('click', () => {
+                        toggleFollow(username, userId, followToggleButton);
+                    });
+                    userCard.appendChild(followToggleButton);
+
+                    searchResultsDiv.appendChild(userCard);
+                });
+
+                if (!resultsFound) {
+                     searchResultsDiv.innerHTML = `<p class="message-container">No users found matching "${searchTerm}".</p>`;
+                }
+
+            } catch (error) {
+                console.error("Error searching users:", error);
+                searchResultsDiv.innerHTML = '<p class="message-container" style="color: red;">Error searching users. Make sure you have a Firestore index for "username" if you encounter an error. Check console for details.</p>';
+            }
+        }
+
+        // Event Listeners
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Check authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                console.log("User authenticated. UID:", currentUserId);
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists && userDoc.data().username) {
+                        currentUsername = userDoc.data().username;
+                        console.log("Current Username:", currentUsername);
+                    } else {
+                        const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
+                        if (!usernameQuery.empty) {
+                            currentUsername = usernameQuery.docs[0].id;
+                            await db.collection('users').doc(user.uid).set({ username: currentUsername }, { merge: true });
+                            console.log("Username found in usernames collection:", currentUsername);
+                        } else {
+                            console.warn("Username not found for UID, redirecting to index.html");
+                            window.location.href = 'index.html';
+                            return;
+                        }
+                    }
+                    await fetchFollowingList(currentUserId);
+                } catch (error) {
+                    console.error("Error in auth state change for search page:", error);
+                    window.location.href = 'index.html';
+                }
+
+            } else {
+                console.log("No user authenticated, redirecting to index.html");
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

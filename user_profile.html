@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .header {
+            background-color: #1da1f2;
+            color: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .header .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+        .header .profile-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        /* MODIFIED: Profile Card Layout */
+        .profile-card {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            /* Removed text-align: center; */
+            position: relative; /* For positioning follow button */
+        }
+
+        /* New container for profile pic and username for left alignment */
+        .profile-header-top {
+            display: flex;
+            align-items: flex-start; /* Align pic/name to top */
+            margin-bottom: 15px;
+        }
+
+        .profile-pic-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 15px; /* Space to the username */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ddd;
+            color: #555;
+            font-size: 30px;
+            font-weight: bold;
+            text-transform: uppercase;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .profile-pic-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .username-info { /* New container for username and tick */
+            display: flex;
+            flex-direction: column; /* Stack username and other info if needed */
+            align-items: flex-start; /* Align username to the left */
+        }
+        .username-display {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px; /* Space between username and bio */
+        }
+        .verified-tick {
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+        }
+        .user-bio {
+            color: #666;
+            margin-bottom: 15px;
+            text-align: left; /* Align bio to left */
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: flex-start; /* Align stats to the left */
+            gap: 25px; /* Space between stats */
+            margin-bottom: 20px;
+            font-size: 15px;
+        }
+        .profile-stat-item {
+            text-align: left; /* Align stat numbers/labels to left */
+        }
+        .profile-stat-item strong {
+            display: block;
+            font-size: 18px;
+            color: #333;
+        }
+        .follow-button-container {
+            position: absolute; /* Position relative to profile-card */
+            top: 20px; /* Adjust as needed */
+            right: 20px; /* Adjust as needed */
+        }
+        .follow-btn {
+            background-color: #1da1f2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            white-space: nowrap; /* Prevent button text from wrapping */
+        }
+        .follow-btn:hover {
+            background-color: #0d8ddb;
+        }
+        .follow-btn.unfollow {
+            background-color: #e0245e;
+        }
+        .follow-btn.unfollow:hover {
+            background-color: #c71c4c;
+        }
+        .tweets-section {
+            width: 100%;
+            max-width: 450px;
+            margin-top: 20px;
+        }
+        .tweets-section h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        /* Styles for tweet cards within profile (re-using from home.html) */
+        .tweet-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            word-wrap: break-word;
+            position: relative;
+        }
+        .tweet-card .tweet-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .tweet-card .profile-pic-container {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .tweet-card .username {
+            font-weight: bold;
+            color: #66757f;
+            font-size: 15px;
+        }
+        /* Removed .tweet-card .username-link as it's not needed here */
+        .tweet-card .tweet-content {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        .tweet-card .tweet-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .tweet-card .tweet-video-container {
+            position: relative;
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .tweet-card .tweet-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+        .tweet-card .video-mute-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10;
+        }
+        .tweet-card .tweet-link {
+            font-size: 0.9em;
+            color: #1da1f2;
+            word-break: break-all;
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+        .tweet-actions {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+        .tweet-action-btn {
+            background: none;
+            border: none;
+            color: #66757f;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s ease-in-out;
+        }
+        .tweet-action-btn i {
+            font-size: 18px;
+        }
+        .tweet-action-btn:hover {
+            color: #1da1f2;
+        }
+        .tweet-action-btn.like-btn.liked {
+            color: #e0245e;
+        }
+        .tweet-action-btn.like-btn.liked i {
+            color: #e0245e;
+        }
+        .tweet-action-btn.repost-btn.reposted {
+            color: #17bf63;
+        }
+        .tweet-action-btn.repost-btn.reposted i {
+            color: #17bf63;
+        }
+        .tweet-card .timestamp {
+            color: #66757f;
+            font-size: 12px;
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+        }
+
+        /* Footer Styling (same as home.html) */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            padding: 8px 0;
+            width: 100%;
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        .footer-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #66757f;
+            text-decoration: none;
+            font-size: 11px;
+            transition: color 0.2s ease-in-out;
+            padding: 5px 0;
+            flex: 1;
+            min-width: 0;
+            position: relative;
+        }
+
+        .footer-icon i {
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+
+        .footer-icon:hover,
+        .footer-icon.active {
+            color: #1da1f2;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 18px;
+            background-color: #e0245e;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            min-width: 12px;
+            text-align: center;
+            display: none;
+            transform: translate(50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <button class="back-button" onclick="history.back()"><i class="fas fa-arrow-left"></i></button>
+        <h1 class="profile-title" id="profile-page-title">User Profile</h1>
+    </header>
+
+    <div class="main-content">
+        <div class="profile-card">
+            <div class="profile-header-top">
+                <div class="profile-pic-container" id="profile-pic-container-page">
+                    </div>
+                <div class="username-info">
+                    <div class="username-display" id="profile-username-display">
+                        </div>
+                </div>
+            </div>
+            <p class="user-bio" id="user-bio">Loading bio...</p>
+            <div class="profile-stats">
+                <div class="profile-stat-item">
+                    <strong id="followers-count">0</strong>
+                    <span>Followers</span>
+                </div>
+                <div class="profile-stat-item">
+                    <strong id="following-count">0</strong>
+                    <span>Following</span>
+                </div>
+            </div>
+            <div class="follow-button-container">
+                <button class="follow-btn" id="profile-follow-btn">Loading...</button>
+            </div>
+        </div>
+
+        <div class="tweets-section">
+            <h2>Peeps</h2>
+            <div id="user-tweets-feed">
+                <p style="text-align: center; color: #66757f;">Loading peeps...</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <a href="home.html" class="footer-icon">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="footer-icon">
+            <i class="fas fa-search"></i>
+            <span>Search</span>
+        </a>
+        <a href="notifications.html" class="footer-icon" id="notifications-link">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+            <span class="notification-badge" id="notification-badge"></span>
+        </a>
+        <a href="profile.html" class="footer-icon">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase configuration (same as other pages)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Get elements for the profile page
+        const profilePageTitle = document.getElementById('profile-page-title');
+        const profilePicContainer = document.getElementById('profile-pic-container-page');
+        const profileUsernameDisplay = document.getElementById('profile-username-display');
+        const userBioElement = document.getElementById('user-bio');
+        const followersCountElement = document.getElementById('followers-count');
+        const followingCountElement = document.getElementById('following-count');
+        const profileFollowBtn = document.getElementById('profile-follow-btn');
+        const userTweetsFeed = document.getElementById('user-tweets-feed');
+        const notificationBadge = document.getElementById('notification-badge');
+
+        let currentUserId = null; // Current logged-in user's UID
+        let currentUsername = null; // Current logged-in user's username
+        let currentUserFollowing = new Set(); // Current logged-in user's following list
+
+        let targetUsername = null; // The username of the profile being viewed
+        let targetUserId = null; // The UID of the profile being viewed
+
+        // Helper function to format timestamp (re-used from home.html)
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Just now';
+            const date = timestamp.toDate();
+            const now = new Date();
+            const diffMs = now - date;
+
+            const seconds = Math.floor(diffMs / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+
+            const options = { month: 'short', day: 'numeric' };
+            if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+            }
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Function to create the verified tick SVG element (re-used from home.html)
+        function createVerifiedTickSvg() {
+            const svgString = `<svg class="verified-tick" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
+<g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+	<polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+	<polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+</g>
+</svg>`;
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
+            return svgDoc.documentElement;
+        }
+
+        // Function to fetch current user's following list (re-used from home.html)
+        async function fetchCurrentUserFollowingList(userId) {
+            if (!userId) return;
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    currentUserFollowing = new Set(userData.following || []);
+                } else {
+                    currentUserFollowing = new Set();
+                }
+            } catch (error) {
+                console.error("Error fetching current user's following list:", error);
+            }
+        }
+
+        // Function to handle follow/unfollow action (re-used from home.html, adapted for profile page)
+        async function toggleFollow(targetUsernameParam, targetUserIdParam, buttonElement) {
+            if (!currentUserId || !currentUsername) {
+                alert("You must be logged in to follow/unfollow users.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (targetUsernameParam === currentUsername) {
+                // This condition should already be handled by disabling the button
+                console.warn("Attempted to follow/unfollow self.");
+                return;
+            }
+
+            const userRef = db.collection('users').doc(currentUserId);
+            const targetUserRef = db.collection('users').doc(targetUserIdParam);
+
+            try {
+                if (currentUserFollowing.has(targetUsernameParam)) {
+                    // Unfollow Logic
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayRemove(targetUsernameParam)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayRemove(currentUsername)
+                    });
+                    currentUserFollowing.delete(targetUsernameParam);
+                    buttonElement.textContent = 'Follow';
+                    buttonElement.classList.remove('unfollow');
+
+                } else {
+                    // Follow Logic
+                    await userRef.update({
+                        following: firebase.firestore.FieldValue.arrayUnion(targetUsernameParam)
+                    });
+                    await targetUserRef.update({
+                        followers: firebase.firestore.FieldValue.arrayUnion(currentUsername)
+                    });
+                    currentUserFollowing.add(targetUsernameParam);
+                    buttonElement.textContent = 'Unfollow';
+                    buttonElement.classList.add('unfollow');
+
+                    // Create/update follow notification
+                    try {
+                        const existingNotificationQuery = await db.collection('notifications')
+                            .where('type', '==', 'follow')
+                            .where('fromUserId', '==', currentUserId)
+                            .where('toUserId', '==', targetUserIdParam)
+                            .limit(1)
+                            .get();
+
+                        if (!existingNotificationQuery.empty) {
+                            const existingNotificationDoc = existingNotificationQuery.docs[0];
+                            await existingNotificationDoc.ref.update({
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false,
+                                actionTaken: false
+                            });
+                        } else {
+                            await db.collection('notifications').add({
+                                type: 'follow',
+                                fromUsername: currentUsername,
+                                fromUserId: currentUserId,
+                                toUsername: targetUsernameParam,
+                                toUserId: targetUserIdParam,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false,
+                                actionTaken: false
+                            });
+                        }
+                    } catch (notificationError) {
+                        console.error("Error handling follow notification:", notificationError);
+                    }
+                }
+                // Re-fetch target user's profile data to update follower/following counts
+                await fetchUserProfile(targetUsernameParam); // Re-render profile data
+            } catch (error) {
+                console.error("Error toggling follow status:", error);
+                alert("Failed to update follow status. Please try again.");
+            }
+        }
+
+        // Function to add event listeners for like, repost, and reply buttons (re-used from home.html)
+        function addTweetActionListeners(tweetCard, tweetId, initialLikes = [], initialReposts = []) {
+            const likeButton = tweetCard.querySelector('.like-btn');
+            const likeCountSpan = tweetCard.querySelector('.like-count');
+            const repostButton = tweetCard.querySelector('.repost-btn');
+            const repostCountSpan = tweetCard.querySelector('.repost-count');
+            const replyButton = tweetCard.querySelector('.reply-btn');
+
+            let likes = new Set(initialLikes);
+            let reposts = new Set(initialReposts);
+
+            if (currentUserId && likes.has(currentUserId)) {
+                likeButton.classList.add('liked');
+            } else {
+                likeButton.classList.remove('liked');
+            }
+            likeCountSpan.textContent = likes.size;
+
+            if (currentUserId && reposts.has(currentUserId)) {
+                repostButton.classList.add('reposted');
+            } else {
+                repostButton.classList.remove('reposted');
+            }
+            repostCountSpan.textContent = reposts.size;
+
+            likeButton.addEventListener('click', async () => {
+                if (!currentUserId) {
+                    alert("You must be logged in to like tweets.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const tweetRef = db.collection('tweets').doc(tweetId);
+                try {
+                    if (likes.has(currentUserId)) {
+                        await tweetRef.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUserId) });
+                        likes.delete(currentUserId);
+                        likeButton.classList.remove('liked');
+                    } else {
+                        await tweetRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUserId) });
+                        likes.add(currentUserId);
+                        likeButton.classList.add('liked');
+
+                        const tweetDoc = await tweetRef.get();
+                        if (tweetDoc.exists) {
+                            const tweetData = tweetDoc.data();
+                            if (tweetData.userId !== currentUserId) {
+                                try {
+                                    await db.collection('notifications').add({
+                                        type: 'like',
+                                        fromUsername: currentUsername,
+                                        fromUserId: currentUserId,
+                                        toUsername: tweetData.username,
+                                        toUserId: tweetData.userId,
+                                        tweetId: tweetId,
+                                        tweetContent: tweetData.content.substring(0, 50) + (tweetData.content.length > 50 ? '...' : ''),
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        read: false
+                                    });
+                                } catch (notificationError) {
+                                    console.error("Error creating like notification:", notificationError);
+                                }
+                            }
+                        }
+                    }
+                    likeCountSpan.textContent = likes.size;
+                } catch (error) {
+                    console.error("Error updating like status:", error);
+                    alert("Failed to update like status. Please try again.");
+                }
+            });
+
+            repostButton.addEventListener('click', async () => {
+                if (!currentUserId) {
+                    alert("You must be logged in to repost tweets.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const tweetRef = db.collection('tweets').doc(tweetId);
+                try {
+                    if (reposts.has(currentUserId)) {
+                        await tweetRef.update({ reposts: firebase.firestore.FieldValue.arrayRemove(currentUserId) });
+                        reposts.delete(currentUserId);
+                        repostButton.classList.remove('reposted');
+                    } else {
+                        await tweetRef.update({ reposts: firebase.firestore.FieldValue.arrayUnion(currentUserId) });
+                        reposts.add(currentUserId);
+                        repostButton.classList.add('reposted');
+
+                        const tweetDoc = await tweetRef.get();
+                        if (tweetDoc.exists) {
+                            const tweetData = tweetDoc.data();
+                            if (tweetData.userId !== currentUserId) {
+                                try {
+                                    await db.collection('notifications').add({
+                                        type: 'repost',
+                                        fromUsername: currentUsername,
+                                        fromUserId: currentUserId,
+                                        toUsername: tweetData.username,
+                                        toUserId: tweetData.userId,
+                                        tweetId: tweetId,
+                                        tweetContent: tweetData.content.substring(0, 50) + (tweetData.content.length > 50 ? '...' : ''),
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        read: false
+                                    });
+                                } catch (notificationError) {
+                                    console.error("Error creating repost notification:", notificationError);
+                                }
+                            }
+                        }
+                    }
+                    repostCountSpan.textContent = reposts.size;
+                } catch (error) {
+                    console.error("Error updating repost status:", error);
+                    alert("Failed to update repost status. Please try again.");
+                }
+            });
+
+            replyButton.addEventListener('click', () => {
+                if (!currentUserId) {
+                    alert("You must be logged in to reply to tweets.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+                window.location.href = `reply.html?tweetId=${tweetId}`;
+            });
+        }
+
+        // Intersection Observer for Video Autoplay (re-used from home.html)
+        const videoObserverOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.8
+        };
+
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    video.play().catch(error => {
+                        console.warn("Video autoplay prevented:", error);
+                    });
+                } else {
+                    video.pause();
+                }
+            });
+        }, videoObserverOptions);
+
+        // Notification Badge Logic (re-used from home.html)
+        function updateNotificationBadge(count) {
+            if (count > 0) {
+                notificationBadge.textContent = count;
+                notificationBadge.style.display = 'block';
+            } else {
+                notificationBadge.textContent = '';
+                notificationBadge.style.display = 'none';
+            }
+        }
+
+        // Listen for real-time updates to notifications (re-used from home.html)
+        function setupNotificationListener(userId) {
+            if (!userId) return;
+            db.collection('notifications')
+                .where('toUserId', '==', userId)
+                .where('read', '==', false)
+                .onSnapshot(snapshot => {
+                    const unreadCount = snapshot.docs.length;
+                    updateNotificationBadge(unreadCount);
+                }, error => {
+                    console.error("Error listening to notifications:", error);
+                });
+        }
+
+
+        // Function to fetch and display the target user's profile and tweets
+        async function fetchUserProfile(username) {
+            if (!username) {
+                profileUsernameDisplay.textContent = 'User not found.';
+                userBioElement.textContent = 'No username provided.';
+                userTweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">No username to display tweets.</p>';
+                profileFollowBtn.style.display = 'none';
+                return;
+            }
+
+            profilePageTitle.textContent = `@${username}`;
+            profileUsernameDisplay.innerHTML = `<span class="username">${username}</span>`; // Initial display
+            profileFollowBtn.textContent = 'Loading...';
+            profileFollowBtn.disabled = true;
+            userTweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">Loading peeps...</p>';
+
+            try {
+                // 1. Fetch target user's data from 'users' collection
+                const userQuery = await db.collection('users').where('username', '==', username).limit(1).get();
+                if (userQuery.empty) {
+                    profileUsernameDisplay.innerHTML = `<span class="username">${username}</span>`;
+                    userBioElement.textContent = 'Profile not found.';
+                    followersCountElement.textContent = '0';
+                    followingCountElement.textContent = '0';
+                    profileFollowBtn.style.display = 'none'; // Hide button if user not found
+                    userTweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">No peeps found for this user.</p>';
+                    return;
+                }
+
+                const userDoc = userQuery.docs[0];
+                const userData = userDoc.data();
+                targetUserId = userDoc.id; // Store target user's UID
+
+                // Update profile card details
+                profileUsernameDisplay.innerHTML = `<span class="username">${userData.username}</span>`;
+                if (userData.isVerified) {
+                    profileUsernameDisplay.appendChild(createVerifiedTickSvg());
+                }
+
+                // Profile Picture
+                profilePicContainer.innerHTML = ''; // Clear previous content
+                if (userData.profilePictureUrl) {
+                    const profilePicImg = document.createElement('img');
+                    profilePicImg.src = userData.profilePictureUrl;
+                    profilePicImg.alt = `${userData.username}'s profile picture`;
+                    profilePicContainer.appendChild(profilePicImg);
+                } else {
+                    const firstLetter = document.createElement('span');
+                    firstLetter.textContent = userData.username ? userData.username.charAt(0).toUpperCase() : '?';
+                    profilePicContainer.appendChild(firstLetter);
+                }
+
+                userBioElement.textContent = userData.bio || 'No bio available.';
+                followersCountElement.textContent = (userData.followers ? userData.followers.length : 0).toLocaleString();
+                followingCountElement.textContent = (userData.following ? userData.following.length : 0).toLocaleString();
+
+
+                // Configure Follow/Unfollow button
+                if (currentUserId && targetUserId === currentUserId) {
+                    profileFollowBtn.textContent = 'Your Profile';
+                    profileFollowBtn.disabled = true;
+                    profileFollowBtn.style.backgroundColor = '#6c757d'; // Grey out "Your Profile" button
+                    profileFollowBtn.style.cursor = 'default';
+                } else {
+                    profileFollowBtn.disabled = false;
+                    profileFollowBtn.style.backgroundColor = ''; // Reset background
+                    profileFollowBtn.style.cursor = 'pointer';
+                    if (currentUserFollowing.has(userData.username)) {
+                        profileFollowBtn.textContent = 'Unfollow';
+                        profileFollowBtn.classList.add('unfollow');
+                    } else {
+                        profileFollowBtn.textContent = 'Follow';
+                        profileFollowBtn.classList.remove('unfollow');
+                    }
+                    // Add event listener to follow button
+                    profileFollowBtn.onclick = () => toggleFollow(userData.username, targetUserId, profileFollowBtn);
+                }
+
+
+                // 2. Fetch and display tweets by this user
+                const tweetsSnapshot = await db.collection('tweets').where('userId', '==', targetUserId).orderBy('timestamp', 'desc').get();
+                userTweetsFeed.innerHTML = ''; // Clear loading message
+
+                if (tweetsSnapshot.empty) {
+                    userTweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">No peeps yet from this user.</p>';
+                    return;
+                }
+
+                tweetsSnapshot.forEach(doc => {
+                    const tweet = { id: doc.id, ...doc.data() };
+                    const tweetCard = document.createElement('div');
+                    tweetCard.classList.add('tweet-card');
+
+                    const tweetHeader = document.createElement('div');
+                    tweetHeader.classList.add('tweet-header');
+
+                    // Profile Pic
+                    const tweetProfilePicContainer = document.createElement('div');
+                    tweetProfilePicContainer.classList.add('profile-pic-container');
+                    if (userData.profilePictureUrl) {
+                        const profilePicImg = document.createElement('img');
+                        profilePicImg.src = userData.profilePictureUrl;
+                        profilePicImg.alt = `${tweet.username}'s profile picture`;
+                        tweetProfilePicContainer.appendChild(profilePicImg);
+                    } else {
+                        const firstLetter = document.createElement('span');
+                        firstLetter.textContent = tweet.username ? tweet.username.charAt(0).toUpperCase() : '?';
+                        tweetProfilePicContainer.appendChild(firstLetter);
+                    }
+                    tweetHeader.appendChild(tweetProfilePicContainer);
+
+                    const usernameSpan = document.createElement('span');
+                    usernameSpan.classList.add('username');
+                    usernameSpan.textContent = tweet.username;
+                    tweetHeader.appendChild(usernameSpan);
+
+                    if (userData.isVerified) {
+                        tweetHeader.appendChild(createVerifiedTickSvg());
+                    }
+
+                    // No follow button on individual tweets on a profile page as it's already at the top
+
+                    const contentP = document.createElement('p');
+                    contentP.classList.add('tweet-content');
+                    contentP.textContent = tweet.content;
+
+                    tweetCard.appendChild(tweetHeader);
+                    tweetCard.appendChild(contentP);
+
+                    if (tweet.imageUrl) {
+                        const tweetImage = document.createElement('img');
+                        tweetImage.classList.add('tweet-image');
+                        tweetImage.src = tweet.imageUrl;
+                        tweetImage.alt = 'Tweet image';
+                        tweetCard.appendChild(tweetImage);
+                    } else if (tweet.videoUrl) {
+                        const videoContainer = document.createElement('div');
+                        videoContainer.classList.add('tweet-video-container');
+
+                        const tweetVideo = document.createElement('video');
+                        tweetVideo.classList.add('tweet-video');
+                        tweetVideo.src = tweet.videoUrl;
+                        tweetVideo.autoplay = false;
+                        tweetVideo.loop = true;
+                        tweetVideo.muted = true;
+                        tweetVideo.alt = 'Tweet video';
+                        tweetVideo.playsInline = true;
+                        tweetVideo.preload = "metadata";
+
+                        tweetVideo.addEventListener('click', () => {
+                            if (tweetVideo.paused) {
+                                tweetVideo.play();
+                            } else {
+                                tweetVideo.pause();
+                            }
+                        });
+
+                        const muteButton = document.createElement('button');
+                        muteButton.classList.add('video-mute-btn');
+                        muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+
+                        muteButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            tweetVideo.muted = !tweetVideo.muted;
+                            if (tweetVideo.muted) {
+                                muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                            } else {
+                                muteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                            }
+                        });
+
+                        videoContainer.appendChild(tweetVideo);
+                        videoContainer.appendChild(muteButton);
+                        tweetCard.appendChild(videoContainer);
+
+                        videoObserver.observe(tweetVideo);
+                    }
+
+                    if (tweet.linkUrl) {
+                        const tweetLink = document.createElement('a');
+                        tweetLink.classList.add('tweet-link');
+                        tweetLink.href = tweet.linkUrl;
+                        tweetLink.target = '_blank';
+                        tweetLink.rel = 'noopener noreferrer';
+                        tweetLink.textContent = tweet.linkUrl;
+                        tweetCard.appendChild(tweetLink);
+                    }
+
+                    const tweetActions = document.createElement('div');
+                    tweetActions.classList.add('tweet-actions');
+
+                    const likeButton = document.createElement('button');
+                    likeButton.classList.add('tweet-action-btn', 'like-btn');
+                    likeButton.innerHTML = `<i class="far fa-heart"></i> <span class="like-count">${tweet.likes ? tweet.likes.length : 0}</span>`;
+                    tweetActions.appendChild(likeButton);
+
+                    const repostButton = document.createElement('button');
+                    repostButton.classList.add('tweet-action-btn', 'repost-btn');
+                    repostButton.innerHTML = `<i class="fas fa-retweet"></i> <span class="repost-count">${tweet.reposts ? tweet.reposts.length : 0}</span>`;
+                    tweetActions.appendChild(repostButton);
+
+                    const replyButton = document.createElement('button');
+                    replyButton.classList.add('tweet-action-btn', 'reply-btn');
+                    replyButton.innerHTML = `<i class="far fa-comment"></i> <span>Reply</span>`;
+                    tweetActions.appendChild(replyButton);
+
+                    tweetCard.appendChild(tweetActions);
+
+                    const timestampSpan = document.createElement('span');
+                    timestampSpan.classList.add('timestamp');
+                    timestampSpan.textContent = tweet.timestamp ? formatTimestamp(tweet.timestamp) : 'Just now';
+                    tweetCard.appendChild(timestampSpan);
+
+                    userTweetsFeed.appendChild(tweetCard);
+                    addTweetActionListeners(tweetCard, tweet.id, tweet.likes || [], tweet.reposts || []);
+                });
+
+            } catch (error) {
+                console.error("Error fetching user profile or tweets:", error);
+                userTweetsFeed.innerHTML = '<p style="text-align: center; color: red;">Error loading profile. Please try again.</p>';
+                profileUsernameDisplay.innerHTML = `<span class="username">${username}</span>`;
+                userBioElement.textContent = 'Could not load profile details.';
+                followersCountElement.textContent = '0';
+                followingCountElement.textContent = '0';
+                profileFollowBtn.style.display = 'none';
+            }
+        }
+
+
+        // On page load:
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                // Fetch current user's username and following list first
+                const currentUserDoc = await db.collection('users').doc(user.uid).get();
+                if (currentUserDoc.exists && currentUserDoc.data().username) {
+                    const userData = currentUserDoc.data();
+                    currentUsername = userData.username;
+                    currentUserFollowing = new Set(userData.following || []); // Ensure this is loaded before calling fetchUserProfile
+                } else {
+                    // Fallback to usernames collection if needed
+                    const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
+                    if (!usernameQuery.empty) {
+                        currentUsername = usernameQuery.docs[0].id;
+                    } else {
+                        // Redirect if current user's username is not found
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
+                setupNotificationListener(currentUserId); // Set up real-time notification listener
+
+                // Get target username from URL query parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                targetUsername = urlParams.get('username');
+
+                if (targetUsername) {
+                    fetchUserProfile(targetUsername);
+                } else {
+                    // If no username in URL, redirect to current user's own profile page (if you have one)
+                    // For now, let's just show an error or redirect home.
+                    userTweetsFeed.innerHTML = '<p style="text-align: center; color: red;">No username specified in URL.</p>';
+                    profilePageTitle.textContent = 'Error';
+                }
+
+            } else {
+                // No user is signed in. Redirect to login page.
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

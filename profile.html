@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter Clone - Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- General Body & Layout --- */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* --- Header Styling (Copied from home.html) --- */
+        .header {
+            background-color: #1da1f2; /* Twitter Blue */
+            color: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header .welcome-username {
+            font-size: 17px;
+            font-weight: bold;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 1;
+            margin-right: 15px;
+        }
+
+        /* --- Three Dot Menu Styling (Header and Tweet) --- */
+        .three-dot-menu, .tweet-options-menu {
+            position: relative;
+            display: inline-block;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .three-dot-menu i, .tweet-options-menu i {
+            font-size: 24px; /* Size of the three dots for header */
+            color: white;
+            padding: 5px;
+        }
+
+        .tweet-options-menu i {
+            font-size: 18px; /* Slightly smaller for tweet cards */
+            color: #66757f; /* Grey for tweet options */
+            padding: 3px;
+        }
+
+        .dropdown-content {
+            display: none; /* Hidden by default */
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 120px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1; /* For header dropdown */
+            right: 0; /* Align to the right of the menu icon */
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .tweet-options-menu .dropdown-content {
+            z-index: 2; /* Higher z-index to appear over other tweet cards */
+        }
+
+        .dropdown-content button {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .dropdown-content button:hover {
+            background-color: #ddd;
+        }
+
+        /* Show the dropdown menu on active state */
+        .three-dot-menu.active .dropdown-content,
+        .tweet-options-menu.active .dropdown-content {
+            display: block;
+        }
+
+
+        /* --- Profile Info Card --- */
+        .profile-info-card {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .profile-pic-display {
+            width: 80px; /* Larger for profile page */
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 15px auto; /* Center and add space below */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ddd;
+            color: #555;
+            font-size: 36px; /* Larger for the letter */
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 2px solid #1da1f2; /* Blue border */
+        }
+
+        .profile-pic-display img,
+        .profile-pic-display video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-pic-display video {
+            background-color: black; /* Ensure video background is dark */
+        }
+
+        .profile-username {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Align tick vertically */
+        }
+
+        .profile-bio { /* New style for bio */
+            font-size: 14px;
+            color: #66757f;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
+        }
+        
+        /* --- Verified Tick Styling (added/updated) --- */
+        .verified-tick {
+            fill: rgb(0,150,241); /* Standard blue tick color */
+            margin-left: 4px; /* Default margin for smaller ticks (tweets) */
+            vertical-align: middle; /* Align with text */
+            flex-shrink: 0; /* Prevent it from shrinking */
+        }
+
+        .verified-tick.small {
+            width: 18px;
+            height: 18px;
+        }
+
+        .verified-tick.large {
+            width: 22px;
+            height: 22px;
+            margin-left: 8px; /* Larger margin for larger ticks (profile) */
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            font-size: 14px;
+            color: #66757f;
+        }
+
+        .stat-item strong {
+            font-size: 16px;
+            color: #333;
+            display: block; /* Make number appear above label */
+        }
+
+        .profile-actions { /* Container for buttons */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px; /* Space between buttons/icons */
+            margin-top: 15px;
+        }
+
+        .edit-profile-btn, .edit-bio-btn { /* Style for both buttons */
+            background-color: #1da1f2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .edit-profile-btn:hover, .edit-bio-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        .edit-bio-btn { /* Specific style for bio button if needed */
+            padding: 8px 15px; /* Slightly smaller for icon button */
+            width: 40px; /* Make it a square-ish button for the icon */
+            height: 40px;
+            border-radius: 50%; /* Make it circular */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px; /* Icon size */
+        }
+
+        /* --- General Modal Styling (for all modals) --- */
+        .modal-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            overflow-y: auto; /* For scrollable content in modals */
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            max-height: 90vh; /* Limit modal height */
+            overflow-y: auto; /* Scroll content inside modal if too tall */
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #66757f;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content textarea,
+        .modal-content input[type="file"] {
+            width: calc(100% - 22px); /* Adjust for padding and border */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .modal-content textarea {
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 80px;
+        }
+
+        /* Custom file input appearance */
+        .modal-content input[type="file"] {
+            border: none;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        .modal-content input[type="file"]::file-selector-button {
+            background-color: #1da1f2;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .modal-content input[type="file"]::file-selector-button:hover {
+            background-color: #0d8ddb;
+        }
+
+
+        .modal-image-preview,
+        .modal-video-preview { /* Added .modal-video-preview */
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 50%; /* For profile pic/video */
+            object-fit: cover;
+            margin: 10px auto 20px auto;
+            display: block;
+            border: 1px solid #ddd;
+        }
+
+        .modal-tweet-image-preview,
+        .modal-tweet-video-preview { /* Added .modal-tweet-video-preview */
+            max-width: 100%; /* For tweet image/video */
+            max-height: 200px;
+            object-fit: contain;
+            margin: 10px auto 20px auto;
+            display: block;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end; /* Push buttons to the right */
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .modal-buttons .save-btn {
+            background-color: #1da1f2;
+            color: white;
+        }
+
+        .modal-buttons .save-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        .modal-buttons .cancel-btn {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .modal-buttons .cancel-btn:hover {
+            background-color: #cccccc;
+        }
+
+        /* --- User Tweets Feed (Copied from home.html with minor adjustments) --- */
+        .user-tweets-feed {
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+
+        .tweet-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .tweet-card .tweet-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative; /* For positioning the three-dot menu */
+        }
+
+        /* Profile Picture/Fallback Letter Styling (for tweets) */
+        .tweet-card .profile-pic-container {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ddd;
+            color: #555;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .tweet-card .profile-pic-container img,
+        .tweet-card .profile-pic-container video { /* Added video for tweet profile */
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tweet-card .username {
+            font-weight: bold;
+            color: #66757f;
+            font-size: 15px;
+        }
+
+        .follow-btn {
+            background-color: #1da1f2;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            margin-left: auto; /* Pushes it to the right */
+            white-space: nowrap;
+        }
+
+        .follow-btn:hover {
+            background-color: #0d8ddb;
+        }
+
+        .follow-btn.unfollow {
+            background-color: #e0245e;
+        }
+
+        .follow-btn.unfollow:hover {
+            background-color: #c71c4c;
+        }
+
+        .tweet-card .timestamp {
+            color: #66757f;
+            font-size: 12px;
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+        }
+
+        .tweet-card .tweet-content {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .tweet-card .tweet-image,
+        .tweet-card .tweet-video { /* Added .tweet-video */
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            background-color: black; /* Ensure video background is dark */
+        }
+        .tweet-card .tweet-video {
+            display: block; /* Ensure video takes up its own space */
+            width: 100%; /* Make video fill tweet card width */
+            max-height: 300px; /* Limit height for videos */
+            object-fit: contain; /* Ensure video fits within bounds */
+        }
+
+        .tweet-card .tweet-link {
+            font-size: 0.9em;
+            color: #1da1f2;
+            word-break: break-all;
+            margin-top: 5px;
+            margin-bottom: 25px;
+        }
+
+        /* --- New: Tweet Actions (Like/Reply) --- */
+        .tweet-actions {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            margin-top: 10px;
+        }
+
+        .tweet-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #66757f;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .tweet-action-btn i {
+            font-size: 18px;
+        }
+
+        .tweet-action-btn:hover {
+            color: #1da1f2;
+        }
+
+        .tweet-action-btn.like-btn.liked {
+            color: #e0245e; /* Red heart for liked tweets */
+        }
+
+        /* --- Footer Styling (Copied from home.html) --- */
+        .footer {
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            padding: 8px 0;
+            width: 100%;
+            position: sticky;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        .footer-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #66757f;
+            text-decoration: none;
+            font-size: 11px;
+            transition: color 0.2s ease-in-out;
+            padding: 5px 0;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .footer-icon i {
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+
+        .footer-icon:hover,
+        .footer-icon.active {
+            color: #1da1f2;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <span id="header-welcome-username" class="welcome-username"></span>
+        <div class="three-dot-menu" id="three-dot-menu">
+            <i class="fas fa-ellipsis-h"></i>
+            <div class="dropdown-content">
+                <button id="request-verification-btn">Request Verification</button>
+                <button id="delete-account-btn">Delete Account</button>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="profile-info-card">
+            <div id="profile-pic-display" class="profile-pic-display">
+                </div>
+            <div id="profile-username" class="profile-username">
+            </div>
+            <div id="profile-bio" class="profile-bio"></div> <div class="stats-container">
+                <div class="stat-item">
+                    <strong id="following-count">0</strong>
+                    <span>Following</span>
+                </div>
+                <div class="stat-item">
+                    <strong id="followers-count">0</strong>
+                    <span>Followers</span>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button id="edit-profile-btn" class="edit-profile-btn">Edit Profile</button>
+                <button id="edit-bio-btn" class="edit-bio-btn" title="Edit Bio">
+                    <i class="fas fa-pencil-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="user-tweets-feed" id="user-tweets-feed">
+            <p style="text-align: center; color: #66757f;">Loading your peeps...</p>
+        </div>
+    </div>
+
+    <div id="edit-profile-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" id="close-profile-modal-btn">&times;</span>
+            <h2>Edit Profile</h2>
+            <label for="new-profile-pic-input">Profile Picture (Image):</label>
+            <input type="file" id="new-profile-pic-input" accept="image/*">
+            <img id="modal-profile-image-preview" class="modal-image-preview" src="#" alt="New Profile Picture Preview" style="display: none;">
+            
+            <label for="new-profile-video-input">Profile Video (Optional):</label>
+            <input type="file" id="new-profile-video-input" accept="video/*">
+            <video id="modal-profile-video-preview" class="modal-video-preview" src="#" controls muted loop autoplay playsinline style="display: none;"></video>
+            
+            <div class="modal-buttons">
+                <button id="cancel-profile-edit-btn" class="cancel-btn">Cancel</button>
+                <button id="save-profile-btn" class="save-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-bio-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" id="close-bio-modal-btn">&times;</span>
+            <h2>Edit Bio</h2>
+            <label for="bio-input">Your Bio:</label>
+            <textarea id="bio-input" placeholder="Tell us about yourself..." maxlength="160"></textarea>
+            <p id="bio-char-count" style="text-align: right; font-size: 0.8em; color: #66757f;">0/160</p>
+            <p id="bio-error" style="color: red; font-size: 0.85em; margin-top: -10px; margin-bottom: 15px;"></p>
+            <div class="modal-buttons">
+                <button id="cancel-bio-edit-btn" class="cancel-btn">Cancel</button>
+                <button id="save-bio-btn" class="save-btn">Save Bio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-tweet-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" id="close-tweet-modal-btn">&times;</span>
+            <h2>Edit Peep</h2>
+            <label for="edit-tweet-content-input">Peep Content:</label>
+            <textarea id="edit-tweet-content-input" placeholder="What's happening?"></textarea>
+            
+            <label for="edit-tweet-image-input">Peep Image:</label>
+            <input type="file" id="edit-tweet-image-input" accept="image/*">
+            <img id="modal-tweet-image-preview" class="modal-tweet-image-preview" src="#" alt="Peep Image Preview" style="display: none;">
+
+            <label for="edit-tweet-video-input">Peep Video:</label>
+            <input type="file" id="edit-tweet-video-input" accept="video/*">
+            <video id="modal-tweet-video-preview" class="modal-tweet-video-preview" src="#" controls muted loop style="display: none;"></video>
+            
+            <label for="edit-tweet-link-input">Peep Link (Optional):</label>
+            <input type="text" id="edit-tweet-link-input" placeholder="Add a link (e.g., https://example.com)">
+            <p id="tweet-edit-error" style="color: red; font-size: 0.85em; margin-top: -10px; margin-bottom: 15px;"></p>
+
+            <div class="modal-buttons">
+                <button id="cancel-tweet-edit-btn" class="cancel-btn">Cancel</button>
+                <button id="save-tweet-btn" class="save-btn">Save Peep</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <a href="home.html" class="footer-icon">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="search.html" class="footer-icon">
+            <i class="fas fa-search"></i>
+            <span>Search</span>
+        </a>
+        <a href="notifications.html" class="footer-icon">
+            <i class="fas fa-bell"></i>
+            <span>Notifications</span>
+        </a>
+        <a href="profile.html" class="footer-icon active">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+    <script>
+        // Your Firebase configuration (same as index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage(); // Initialize Firebase Storage
+
+        // Get elements
+        const headerWelcomeUsernameElement = document.getElementById('header-welcome-username');
+        const profilePicDisplay = document.getElementById('profile-pic-display');
+        const profileUsernameElement = document.getElementById('profile-username');
+        const profileBioElement = document.getElementById('profile-bio'); // New: Bio display element
+        const followingCountElement = document.getElementById('following-count');
+        const followersCountElement = document.getElementById('followers-count');
+        const editProfileBtn = document.getElementById('edit-profile-btn');
+        const editBioBtn = document.getElementById('edit-bio-btn'); // New: Edit Bio Button
+        const userTweetsFeed = document.getElementById('user-tweets-feed');
+
+        // Three Dot Menu Elements (Header)
+        const threeDotMenu = document.getElementById('three-dot-menu');
+        const requestVerificationBtn = document.getElementById('request-verification-btn'); // NEW ELEMENT
+        const deleteAccountBtn = document.getElementById('delete-account-btn'); // NEW ELEMENT: Delete Account button
+        const logoutBtn = document.getElementById('logout-btn');
+
+
+        // Profile Edit Modal Elements
+        const editProfileModalOverlay = document.getElementById('edit-profile-modal-overlay');
+        const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
+        const newProfilePicInput = document.getElementById('new-profile-pic-input');
+        const modalProfileImagePreview = document.getElementById('modal-profile-image-preview'); 
+        const newProfileVideoInput = document.getElementById('new-profile-video-input'); // New: Profile video input
+        const modalProfileVideoPreview = document.getElementById('modal-profile-video-preview'); // New: Profile video preview
+        const cancelProfileEditBtn = document.getElementById('cancel-profile-edit-btn'); 
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+
+        // New: Bio Edit Modal Elements
+        const editBioModalOverlay = document.getElementById('edit-bio-modal-overlay');
+        const closeBioModalBtn = document.getElementById('close-bio-modal-btn');
+        const bioInput = document.getElementById('bio-input');
+        const bioCharCount = document.getElementById('bio-char-count');
+        const bioError = document.getElementById('bio-error');
+        const cancelBioEditBtn = document.getElementById('cancel-bio-edit-btn');
+        const saveBioBtn = document.getElementById('save-bio-btn');
+
+
+        // Tweet Edit Modal Elements
+        const editTweetModalOverlay = document.getElementById('edit-tweet-modal-overlay');
+        const closeTweetModalBtn = document.getElementById('close-tweet-modal-btn');
+        const editTweetContentInput = document.getElementById('edit-tweet-content-input');
+        const editTweetImageInput = document.getElementById('edit-tweet-image-input');
+        const modalTweetImagePreview = document.getElementById('modal-tweet-image-preview');
+        const editTweetVideoInput = document.getElementById('edit-tweet-video-input'); // New: Tweet video input
+        const modalTweetVideoPreview = document.getElementById('modal-tweet-video-preview'); // New: Tweet video preview
+        const editTweetLinkInput = document.getElementById('edit-tweet-link-input');
+        const tweetEditError = document.getElementById('tweet-edit-error');
+        const cancelTweetEditBtn = document.getElementById('cancel-tweet-edit-btn');
+        const saveTweetBtn = document.getElementById('save-tweet-btn');
+
+        // Global variables for current user data
+        let currentUserId = null;
+        let currentUsername = null;
+        let currentProfilePictureUrl = null;
+        let currentProfileVideoUrl = null; // New: current user's profile video
+        let currentBio = null; // New: current user's bio
+        let currentIsVerified = false; 
+        let currentFollowers = [];
+        let currentFollowing = [];
+
+        let newProfilePictureFile = null; 
+        let newProfileVideoFile = null; // New: For profile video upload
+
+        let editingTweetId = null; 
+        let currentTweetImageUrl = null; 
+        let currentTweetVideoUrl = null; // New: For tweet video
+        let newTweetImageFile = null; 
+        let newTweetVideoFile = null; // New: For tweet video upload
+
+        // ImgBB API Key (ensure this is configured if you're deploying this)
+        const IMGBB_API_KEY = '7184e56bb0953c0545409c441c402a66'; // Replace with your actual ImgBB API Key
+
+        // Cloudinary Cloud Name - REPLACE WITH YOUR ACTUAL CLOUD NAME
+        const CLOUDINARY_CLOUD_NAME = 'dhbqsbv0a'; // Replace with your Cloudinary Cloud Name
+
+        // --- Helper Functions ---
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Just now';
+            const date = timestamp.toDate();
+            const now = new Date();
+            const diffMs = now - date;
+
+            const seconds = Math.floor(diffMs / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return `${seconds}s ago`;
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+
+            const options = { month: 'short', day: 'numeric' };
+            if (date.getFullYear() !== now.getFullYear()) {
+                options.year = 'numeric';
+            }
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Function to create the verified tick SVG element
+        function createVerifiedTickSvg(size = 'small') {
+            const width = size === 'large' ? 22 : 18;
+            const height = size === 'large' ? 22 : 18;
+            const className = size === 'large' ? 'verified-tick large' : 'verified-tick small';
+            // Updated SVG content for the star shape
+            const svgString = `<svg class="${className}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${width}" height="${height}" viewBox="0 0 256 256" xml:space="preserve">
+            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+            </g>
+            </svg>`;
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
+            return svgDoc.documentElement;
+        }
+
+        async function uploadImageToImgBB(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    return data.data.url;
+                } else {
+                    throw new Error(data.error.message || 'ImgBB upload failed');
+                }
+            } catch (error) {
+                console.error("Error uploading image to ImgBB:", error);
+                alert("Failed to upload image. Please try again.");
+                return null;
+            }
+        }
+
+        // New: Function to upload video to Firebase Storage
+        async function uploadVideoToFirebaseStorage(file, path) {
+            if (!file) return null;
+
+            const storageRef = storage.ref(path);
+            const fileRef = storageRef.child(file.name);
+
+            try {
+                const snapshot = await fileRef.put(file);
+                return await snapshot.ref.getDownloadURL();
+            } catch (error) {
+                console.error("Error uploading video to Firebase Storage:", error);
+                alert("Failed to upload video. Please try again.");
+                return null;
+            }
+        }
+
+        // --- Profile Display Functions ---
+
+        function renderProfileInfo() {
+            // Update Header Username
+            headerWelcomeUsernameElement.textContent = `Welcome @${currentUsername}`;
+
+            // Clear previous content
+            profilePicDisplay.innerHTML = '';
+            profileUsernameElement.innerHTML = '';
+
+            // Render Profile Picture/Video/Initial
+            if (currentProfileVideoUrl) {
+                const video = document.createElement('video');
+                video.src = currentProfileVideoUrl;
+                video.alt = `${currentUsername}'s profile video`;
+                video.controls = false; // Auto-play/loop, no controls for profile header
+                video.muted = true;
+                video.loop = true;
+                video.autoplay = true;
+                video.playsInline = true; // For iOS auto-play
+                // Add click listener for play/pause
+                video.addEventListener('click', function() {
+                    if (this.paused) {
+                        this.play();
+                    } else {
+                        this.pause();
+                    }
+                });
+                profilePicDisplay.appendChild(video);
+            } else if (currentProfilePictureUrl) {
+                const img = document.createElement('img');
+                img.src = currentProfilePictureUrl;
+                img.alt = `${currentUsername}'s profile picture`;
+                profilePicDisplay.appendChild(img);
+            } else {
+                const initial = document.createElement('span');
+                initial.textContent = currentUsername ? currentUsername.charAt(0).toUpperCase() : '?';
+                profilePicDisplay.appendChild(initial);
+            }
+
+            // Render Username and Verified Tick
+            const usernameText = document.createTextNode(`@${currentUsername}`);
+            profileUsernameElement.appendChild(usernameText);
+            if (currentIsVerified) {
+                const tickSvg = createVerifiedTickSvg('large'); // Use 'large' tick for profile page
+                profileUsernameElement.appendChild(tickSvg); // Append the SVG
+            }
+
+            // Render Bio
+            profileBioElement.textContent = currentBio || 'No bio set yet.'; // Display bio, or a default message
+
+            // Update Follower/Following Counts
+            followingCountElement.textContent = currentFollowing.length;
+            followersCountElement.textContent = currentFollowers.length;
+        }
+
+        async function fetchAndDisplayUserTweets(userId) {
+            userTweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">Loading your peeps...</p>';
+            try {
+                const tweetsSnapshot = await db.collection('tweets')
+                                                .where('userId', '==', userId)
+                                                .orderBy('timestamp', 'desc') // Order by most recent
+                                                .get();
+                
+                userTweetsFeed.innerHTML = ''; // Clear loading message
+
+                if (tweetsSnapshot.empty) {
+                    userTweetsFeed.innerHTML = '<p style="text-align: center; color: #66757f;">You haven\'t posted any tweets yet!</p>';
+                    return;
+                }
+
+                tweetsSnapshot.forEach(doc => {
+                    const tweet = { id: doc.id, ...doc.data() };
+                    const tweetCard = document.createElement('div');
+                    tweetCard.classList.add('tweet-card');
+
+                    const tweetHeader = document.createElement('div');
+                    tweetHeader.classList.add('tweet-header');
+
+                    // Profile Picture/First Letter for tweet (re-use from home.html logic)
+                    const profilePicContainer = document.createElement('div');
+                    profilePicContainer.classList.add('profile-pic-container');
+                    
+                    // Display profile video or image or initial
+                    if (currentProfileVideoUrl) { 
+                        const profileVideo = document.createElement('video');
+                        profileVideo.src = currentProfileVideoUrl;
+                        profileVideo.alt = `${currentUsername}'s profile video`;
+                        profileVideo.controls = false;
+                        profileVideo.muted = true;
+                        profileVideo.loop = true;
+                        profileVideo.autoplay = true;
+                        profileVideo.playsInline = true;
+                        // Add click listener for play/pause on tweet's profile video
+                        profileVideo.addEventListener('click', function() {
+                            if (this.paused) {
+                                this.play();
+                            } else {
+                                this.pause();
+                            }
+                        });
+                        profilePicContainer.appendChild(profileVideo);
+                    } else if (currentProfilePictureUrl) { 
+                        const profilePicImg = document.createElement('img');
+                        profilePicImg.src = currentProfilePictureUrl;
+                        profilePicImg.alt = `${currentUsername}'s profile picture`;
+                        profilePicContainer.appendChild(profilePicImg);
+                    } else {
+                        const firstLetter = document.createElement('span');
+                        firstLetter.textContent = currentUsername ? currentUsername.charAt(0).toUpperCase() : '?';
+                        profilePicContainer.appendChild(firstLetter);
+                    }
+                    tweetHeader.appendChild(profilePicContainer);
+
+                    const usernameSpan = document.createElement('span');
+                    usernameSpan.classList.add('username');
+                    usernameSpan.textContent = tweet.username;
+                    tweetHeader.appendChild(usernameSpan);
+
+                    // Show tick if tweet's author (current user) is verified
+                    if (currentIsVerified) { // Check the current user's verified status
+                        const tickSvg = createVerifiedTickSvg('small'); // Use 'small' tick for tweets
+                        tweetHeader.appendChild(tickSvg); // Append the SVG
+                    }
+
+                    // Three-dot menu for tweet options
+                    const tweetOptionsMenu = document.createElement('div');
+                    tweetOptionsMenu.classList.add('tweet-options-menu');
+                    tweetOptionsMenu.innerHTML = `
+                        <i class="fas fa-ellipsis-h"></i>
+                        <div class="dropdown-content">
+                            <button class="edit-peep-btn">Edit Peep</button>
+                            <button class="delete-peep-btn">Delete Peep</button>
+                        </div>
+                    `;
+                    tweetHeader.appendChild(tweetOptionsMenu);
+
+                    // Event listener for tweet options menu
+                    tweetOptionsMenu.addEventListener('click', (event) => {
+                        event.stopPropagation(); // Prevent click from closing other dropdowns
+                        // Close any other open tweet option menus first
+                        document.querySelectorAll('.tweet-options-menu.active').forEach(menu => {
+                            if (menu !== tweetOptionsMenu) {
+                                menu.classList.remove('active');
+                            }
+                        });
+                        tweetOptionsMenu.classList.toggle('active');
+                    });
+
+
+                    const contentP = document.createElement('p');
+                    contentP.classList.add('tweet-content');
+                    contentP.textContent = tweet.content;
+                    
+                    tweetCard.appendChild(tweetHeader);
+                    tweetCard.appendChild(contentP);
+
+                    if (tweet.videoUrl) { // Render video if available
+                        const tweetVideo = document.createElement('video');
+                        tweetVideo.classList.add('tweet-video');
+                        tweetVideo.src = tweet.videoUrl;
+                        tweetVideo.alt = 'Tweet video';
+                        tweetVideo.controls = true; // Show controls for tweet videos
+                        tweetVideo.muted = true; // Muted by default
+                        tweetVideo.loop = true; // Loop tweet videos
+                        tweetCard.appendChild(tweetVideo);
+                    } else if (tweet.imageUrl) { // Fallback to image if no video
+                        const tweetImage = document.createElement('img');
+                        tweetImage.classList.add('tweet-image');
+                        tweetImage.src = tweet.imageUrl;
+                        tweetImage.alt = 'Tweet image';
+                        tweetCard.appendChild(tweetImage);
+                    }
+
+                    if (tweet.linkUrl) {
+                        const tweetLink = document.createElement('a');
+                        tweetLink.classList.add('tweet-link');
+                        tweetLink.href = tweet.linkUrl;
+                        tweetLink.target = '_blank';
+                        tweetLink.rel = 'noopener noreferrer';
+                        tweetLink.textContent = tweet.linkUrl;
+                        tweetCard.appendChild(tweetLink);
+                    }
+
+                    const timestampSpan = document.createElement('span');
+                    timestampSpan.classList.add('timestamp');
+                    timestampSpan.textContent = tweet.timestamp ? formatTimestamp(tweet.timestamp) : 'Just now';
+                    tweetCard.appendChild(timestampSpan);
+
+                    // --- Like and Reply Section ---
+                    const tweetActionsDiv = document.createElement('div');
+                    tweetActionsDiv.classList.add('tweet-actions');
+
+                    // Like Button
+                    const likeButton = document.createElement('button');
+                    likeButton.classList.add('tweet-action-btn', 'like-btn');
+                    const liked = tweet.likes && tweet.likes.includes(currentUserId);
+                    if (liked) {
+                        likeButton.classList.add('liked');
+                        likeButton.innerHTML = `<i class="fas fa-heart"></i> <span class="like-count">${tweet.likes ? tweet.likes.length : 0}</span>`;
+                    } else {
+                        likeButton.innerHTML = `<i class="far fa-heart"></i> <span class="like-count">${tweet.likes ? tweet.likes.length : 0}</span>`;
+                    }
+                    likeButton.addEventListener('click', () => handleLikeTweet(tweet.id));
+                    tweetActionsDiv.appendChild(likeButton);
+
+                    // Reply Button
+                    const replyButton = document.createElement('button');
+                    replyButton.classList.add('tweet-action-btn', 'reply-btn'); 
+                    replyButton.innerHTML = `<i class="far fa-comment"></i> <span class="reply-count">Reply</span>`; 
+                    // Redirect to comments.html with tweetId as URL parameter
+                    replyButton.addEventListener('click', () => {
+                        window.location.href = `reply.html?tweetId=${tweet.id}`;
+                    });
+                    tweetActionsDiv.appendChild(replyButton); 
+
+                    tweetCard.appendChild(tweetActionsDiv); // Add actions to card
+
+                    userTweetsFeed.appendChild(tweetCard);
+
+                    // Add event listeners for edit/delete buttons inside this tweet card
+                    tweetOptionsMenu.querySelector('.edit-peep-btn').addEventListener('click', () => {
+                        openEditTweetModal(tweet);
+                    });
+
+                    tweetOptionsMenu.querySelector('.delete-peep-btn').addEventListener('click', () => {
+                        deleteTweet(tweet.id, tweet.imageUrl, tweet.videoUrl); // Pass videoUrl for deletion
+                    });
+                });
+            } catch (error) {
+                console.error("Error fetching user tweets:", error);
+                userTweetsFeed.innerHTML = '<p style="text-align: center; color: red;">Error loading your tweets. Please try again.</p>';
+            }
+        }
+
+        async function deleteTweet(tweetId, imageUrl, videoUrl) { // Added videoUrl
+            if (!confirm('Are you sure you want to delete this peep? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                // Delete the tweet document from Firestore
+                await db.collection('tweets').doc(tweetId).delete();
+
+                // Delete image from ImgBB (note limitations as before)
+                if (imageUrl) {
+                    console.warn("Image associated with tweet will remain on ImgBB as delete hash is not available for direct deletion.");
+                }
+
+                // Delete video from Firebase Storage
+                if (videoUrl) {
+                    try {
+                        const videoRef = storage.refFromURL(videoUrl);
+                        await videoRef.delete();
+                        console.log("Video deleted from Firebase Storage.");
+                    } catch (storageError) {
+                        console.error("Error deleting video from Firebase Storage:", storageError);
+                        alert("Failed to delete video from storage. It might no longer exist or you lack permissions.");
+                    }
+                }
+
+                alert('Peep deleted successfully!');
+                fetchAndDisplayUserTweets(currentUserId); // Re-render tweets after deletion
+            } catch (error) {
+                console.error("Error deleting tweet:", error);
+                alert('Failed to delete peep. Please try again.');
+            }
+        }
+
+        function openEditTweetModal(tweet) {
+            editingTweetId = tweet.id; // Store the ID of the tweet being edited
+            editTweetContentInput.value = tweet.content || '';
+            editTweetLinkInput.value = tweet.linkUrl || '';
+            currentTweetImageUrl = tweet.imageUrl || null; // Store current image URL
+            currentTweetVideoUrl = tweet.videoUrl || null; // Store current video URL
+
+            // Clear both image and video previews initially
+            modalTweetImagePreview.src = '#';
+            modalTweetImagePreview.style.display = 'none';
+            modalTweetVideoPreview.src = '#';
+            modalTweetVideoPreview.style.display = 'none';
+
+            if (currentTweetVideoUrl) {
+                modalTweetVideoPreview.src = currentTweetVideoUrl;
+                modalTweetVideoPreview.style.display = 'block';
+                modalTweetVideoPreview.load(); // Load the video to make it ready for play
+            } else if (currentTweetImageUrl) {
+                modalTweetImagePreview.src = currentTweetImageUrl;
+                modalTweetImagePreview.style.display = 'block';
+            }
+            
+            newTweetImageFile = null; // Reset file input
+            editTweetImageInput.value = ''; // Clear file input visually
+            newTweetVideoFile = null; // Reset video file input
+            editTweetVideoInput.value = ''; // Clear video input visually
+
+            tweetEditError.textContent = ''; // Clear any previous error
+
+            editTweetModalOverlay.style.display = 'flex'; // Show the modal
+            closeAllDropdowns(); // Close any open tweet option menus
+        }
+
+        // --- Event Listeners for Profile Editing ---
+
+        editProfileBtn.addEventListener('click', () => {
+            // Clear both previews before opening
+            modalProfileImagePreview.src = '#';
+            modalProfileImagePreview.style.display = 'none';
+            modalProfileVideoPreview.src = '#';
+            modalProfileVideoPreview.style.display = 'none';
+
+            if (currentProfileVideoUrl) {
+                modalProfileVideoPreview.src = currentProfileVideoUrl;
+                modalProfileVideoPreview.style.display = 'block';
+                modalProfileVideoPreview.load();
+            } else if (currentProfilePictureUrl) {
+                modalProfileImagePreview.src = currentProfilePictureUrl;
+                modalProfileImagePreview.style.display = 'block';
+            }
+            
+            newProfilePictureFile = null; // Reset file input
+            newProfilePicInput.value = ''; // Clear file input visually
+            newProfileVideoFile = null; // Reset video file input
+            newProfileVideoInput.value = ''; // Clear video input visually
+
+            editProfileModalOverlay.style.display = 'flex'; // Show the modal
+        });
+
+        closeProfileModalBtn.addEventListener('click', () => { 
+            editProfileModalOverlay.style.display = 'none'; // Hide the modal
+        });
+
+        cancelProfileEditBtn.addEventListener('click', () => { 
+            editProfileModalOverlay.style.display = 'none'; // Hide the modal
+        });
+
+        newProfilePicInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                newProfilePictureFile = file;
+                newProfileVideoFile = null; // Ensure only one type of media is selected
+                newProfileVideoInput.value = ''; // Clear video input
+                modalProfileVideoPreview.style.display = 'none'; // Hide video preview
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    modalProfileImagePreview.src = e.target.result; 
+                    modalProfileImagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                newProfilePictureFile = null;
+                modalProfileImagePreview.src = '#'; 
+                modalProfileImagePreview.style.display = 'none';
+            }
+        });
+
+        newProfileVideoInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                newProfileVideoFile = file;
+                newProfilePictureFile = null; // Ensure only one type of media is selected
+                newProfilePicInput.value = ''; // Clear image input
+                modalProfileImagePreview.style.display = 'none'; // Hide image preview
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    modalProfileVideoPreview.src = e.target.result; 
+                    modalProfileVideoPreview.style.display = 'block';
+                    modalProfileVideoPreview.load();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                newProfileVideoFile = null;
+                modalProfileVideoPreview.src = '#'; 
+                modalProfileVideoPreview.style.display = 'none';
+            }
+        });
+
+        saveProfileBtn.addEventListener('click', async () => {
+            let uploadedPicUrl = currentProfilePictureUrl;
+            let uploadedVideoUrl = currentProfileVideoUrl;
+
+            // Determine if uploading image or video
+            const isUploadingImage = newProfilePictureFile && !newProfileVideoFile;
+            const isUploadingVideo = newProfileVideoFile && !newProfilePictureFile;
+            const isClearingMedia = !newProfilePictureFile && !newProfileVideoFile && (currentProfilePictureUrl || currentProfileVideoUrl);
+
+
+            saveProfileBtn.textContent = 'Uploading...';
+            saveProfileBtn.disabled = true;
+
+            if (isUploadingImage) {
+                uploadedPicUrl = await uploadImageToImgBB(newProfilePictureFile);
+                uploadedVideoUrl = null; // Clear video if new image is uploaded
+                if (!uploadedPicUrl) {
+                    saveProfileBtn.textContent = 'Save Changes';
+                    saveProfileBtn.disabled = false;
+                    return;
+                }
+            } else if (isUploadingVideo) {
+                uploadedVideoUrl = await uploadVideoToFirebaseStorage(newProfileVideoFile, `profile_videos/${currentUserId}/${newProfileVideoFile.name}`);
+                uploadedPicUrl = null; // Clear image if new video is uploaded
+                if (!uploadedVideoUrl) {
+                    saveProfileBtn.textContent = 'Save Changes';
+                    saveProfileBtn.disabled = false;
+                    return;
+                }
+            } else if (isClearingMedia) {
+                uploadedPicUrl = null;
+                uploadedVideoUrl = null;
+            }
+
+            try {
+                const userRef = db.collection('users').doc(currentUserId);
+                await userRef.update({ 
+                    profilePictureUrl: uploadedPicUrl,
+                    profileVideoUrl: uploadedVideoUrl // Update profile video URL
+                });
+                
+                // If transaction succeeds, update local state
+                currentProfilePictureUrl = uploadedPicUrl;
+                currentProfileVideoUrl = uploadedVideoUrl;
+                renderProfileInfo(); // Re-render profile section with new data
+                editProfileModalOverlay.style.display = 'none';
+                alert("Profile updated successfully!");
+
+            } catch (error) {
+                console.error("Error saving profile:", error);
+                alert("Failed to update profile. Please try again.");
+            } finally {
+                saveProfileBtn.textContent = 'Save Changes';
+                saveProfileBtn.disabled = false;
+            }
+        });
+
+        // --- New: Event Listeners for Bio Editing ---
+        editBioBtn.addEventListener('click', () => {
+            bioInput.value = currentBio || '';
+            bioCharCount.textContent = `${bioInput.value.length}/160`;
+            bioError.textContent = '';
+            editBioModalOverlay.style.display = 'flex';
+        });
+
+        closeBioModalBtn.addEventListener('click', () => {
+            editBioModalOverlay.style.display = 'none';
+        });
+
+        cancelBioEditBtn.addEventListener('click', () => {
+            editBioModalOverlay.style.display = 'none';
+        });
+
+        bioInput.addEventListener('input', () => {
+            const currentLength = bioInput.value.length;
+            bioCharCount.textContent = `${currentLength}/160`;
+            if (currentLength > 160) {
+                bioCharCount.style.color = 'red';
+                bioError.textContent = 'Bio cannot exceed 160 characters.';
+                saveBioBtn.disabled = true;
+            } else {
+                bioCharCount.style.color = '#66757f';
+                bioError.textContent = '';
+                saveBioBtn.disabled = false;
+            }
+        });
+
+        saveBioBtn.addEventListener('click', async () => {
+            const newBio = bioInput.value.trim();
+
+            if (newBio.length > 160) {
+                bioError.textContent = 'Bio cannot exceed 160 characters.';
+                return;
+            }
+
+            try {
+                const userRef = db.collection('users').doc(currentUserId);
+                await userRef.update({ bio: newBio });
+                
+                currentBio = newBio; // Update local state
+                renderProfileInfo(); // Re-render profile section to show new bio
+                editBioModalOverlay.style.display = 'none';
+                alert("Bio updated successfully!");
+            } catch (error) {
+                console.error("Error saving bio:", error);
+                alert("Failed to update bio. Please try again.");
+            }
+        });
+
+        // --- Event Listeners for Tweet Editing ---
+        closeTweetModalBtn.addEventListener('click', () => {
+            editTweetModalOverlay.style.display = 'none';
+            editingTweetId = null; // Clear the editing tweet ID
+        });
+
+        cancelTweetEditBtn.addEventListener('click', () => {
+            editTweetModalOverlay.style.display = 'none';
+            editingTweetId = null; // Clear the editing tweet ID
+        });
+
+        editTweetImageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                newTweetImageFile = file;
+                newTweetVideoFile = null; // Clear video if image is selected
+                editTweetVideoInput.value = ''; // Clear video input
+                modalTweetVideoPreview.style.display = 'none'; // Hide video preview
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    modalTweetImagePreview.src = e.target.result;
+                    modalTweetImagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                newTweetImageFile = null;
+                modalTweetImagePreview.src = '#';
+                modalTweetImagePreview.style.display = 'none';
+            }
+        });
+
+        editTweetVideoInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                newTweetVideoFile = file;
+                newTweetImageFile = null; // Clear image if video is selected
+                editTweetImageInput.value = ''; // Clear image input
+                modalTweetImagePreview.style.display = 'none'; // Hide image preview
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    modalTweetVideoPreview.src = e.target.result;
+                    modalTweetVideoPreview.style.display = 'block';
+                    modalTweetVideoPreview.load();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                newTweetVideoFile = null;
+                modalTweetVideoPreview.src = '#';
+                modalTweetVideoPreview.style.display = 'none';
+            }
+        });
+
+        saveTweetBtn.addEventListener('click', async () => {
+            const newContent = editTweetContentInput.value.trim();
+            const newLink = editTweetLinkInput.value.trim();
+            tweetEditError.textContent = '';
+
+            if (!newContent) {
+                tweetEditError.textContent = 'Peep content cannot be empty.';
+                return;
+            }
+            if (newContent.length > 280) {
+                tweetEditError.textContent = 'Peep content cannot exceed 280 characters.';
+                return;
+            }
+
+            let updatedImageUrl = currentTweetImageUrl;
+            let updatedVideoUrl = currentTweetVideoUrl;
+
+            saveTweetBtn.textContent = 'Uploading...';
+            saveTweetBtn.disabled = true;
+
+            if (newTweetImageFile) {
+                updatedImageUrl = await uploadImageToImgBB(newTweetImageFile);
+                updatedVideoUrl = null; // Clear video if new image is uploaded
+                if (!updatedImageUrl) {
+                    saveTweetBtn.textContent = 'Save Peep';
+                    saveTweetBtn.disabled = false;
+                    return;
+                }
+            } else if (newTweetVideoFile) {
+                updatedVideoUrl = await uploadVideoToFirebaseStorage(newTweetVideoFile, `tweet_videos/${editingTweetId}/${newTweetVideoFile.name}`);
+                updatedImageUrl = null; // Clear image if new video is uploaded
+                if (!updatedVideoUrl) {
+                    saveTweetBtn.textContent = 'Save Peep';
+                    saveTweetBtn.disabled = false;
+                    return;
+                }
+            } else if (!newTweetImageFile && !newTweetVideoFile && (currentTweetImageUrl || currentTweetVideoUrl)) {
+                // If neither new image nor new video is selected, and there was existing media, clear them.
+                updatedImageUrl = null;
+                updatedVideoUrl = null;
+            }
+
+
+            try {
+                const tweetRef = db.collection('tweets').doc(editingTweetId);
+                await tweetRef.update({
+                    content: newContent,
+                    imageUrl: updatedImageUrl, // Update image URL
+                    videoUrl: updatedVideoUrl, // Update video URL
+                    linkUrl: newLink,
+                    editedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+
+                alert('Peep updated successfully!');
+                editTweetModalOverlay.style.display = 'none';
+                editingTweetId = null; 
+                fetchAndDisplayUserTweets(currentUserId); 
+            } catch (error) {
+                console.error("Error updating tweet:", error);
+                alert('Failed to update peep. Please try again.');
+            } finally {
+                saveTweetBtn.textContent = 'Save Peep';
+                saveTweetBtn.disabled = false;
+            }
+        });
+
+        // --- Like Tweet Functionality ---
+        async function handleLikeTweet(tweetId) {
+            if (!currentUserId) {
+                alert("You need to be logged in to like peeps.");
+                return;
+            }
+
+            const tweetRef = db.collection('tweets').doc(tweetId);
+
+            try {
+                await db.runTransaction(async (transaction) => {
+                    const tweetDoc = await transaction.get(tweetRef);
+                    if (!tweetDoc.exists) {
+                        throw "Tweet does not exist!";
+                    }
+
+                    const tweetData = tweetDoc.data();
+                    let likes = tweetData.likes || [];
+
+                    if (likes.includes(currentUserId)) {
+                        // User has already liked, so unlike
+                        likes = likes.filter(id => id !== currentUserId);
+                    } else {
+                        // User has not liked, so like
+                        likes.push(currentUserId);
+                    }
+                    transaction.update(tweetRef, { likes: likes });
+                });
+                // Re-fetch and display tweets to update the UI with new like count/status
+                fetchAndDisplayUserTweets(currentUserId);
+            } catch (error) {
+                console.error("Error liking/unliking tweet:", error);
+                alert("Failed to update like status. Please try again.");
+            }
+        }
+
+        // --- Three-dot menu (Header) and Logout functionality ---
+        threeDotMenu.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent click from immediately closing the menu
+            threeDotMenu.classList.toggle('active');
+        });
+
+        // NEW: Request Verification button handler
+        requestVerificationBtn.addEventListener('click', () => {
+            window.location.href = 'verification.html'; // Redirect to verification page
+            closeAllDropdowns(); // Close the dropdown menu
+        });
+
+        // NEW: Delete Account button handler
+        deleteAccountBtn.addEventListener('click', () => {
+            window.location.href = 'delete_account.html'; // Redirect to the new delete account page
+            closeAllDropdowns(); // Close the dropdown menu
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                window.location.href = 'index.html'; // Redirect to login page after logout
+            } catch (error) {
+                console.error("Error logging out:", error);
+                alert("Failed to logout. Please try again.");
+            }
+        });
+
+        // Function to close all dropdowns (header and tweet options)
+        function closeAllDropdowns() {
+            document.querySelectorAll('.three-dot-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+            });
+            document.querySelectorAll('.tweet-options-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+            });
+        }
+
+        // Close dropdowns/modals if clicked outside
+        document.addEventListener('click', (event) => {
+            // Close header dropdown
+            if (!threeDotMenu.contains(event.target)) {
+                threeDotMenu.classList.remove('active');
+            }
+            // Close tweet options dropdowns
+            document.querySelectorAll('.tweet-options-menu').forEach(menu => {
+                if (!menu.contains(event.target)) {
+                    menu.classList.remove('active');
+                }
+            });
+            // Close profile edit modal if click is outside modal-content but on overlay
+            if (event.target === editProfileModalOverlay) {
+                editProfileModalOverlay.style.display = 'none';
+            }
+            // Close bio edit modal if click is outside modal-content but on overlay
+            if (event.target === editBioModalOverlay) {
+                editBioModalOverlay.style.display = 'none';
+            }
+            // Close tweet edit modal if click is outside modal-content but on overlay
+            if (event.target === editTweetModalOverlay) {
+                editTweetModalOverlay.style.display = 'none';
+                editingTweetId = null;
+            }
+        });
+
+
+        // --- Authentication State Listener ---
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        currentUsername = userData.username || 'Unknown User';
+                        currentProfilePictureUrl = userData.profilePictureUrl || null;
+                        currentProfileVideoUrl = userData.profileVideoUrl || null; // Get profile video URL
+                        currentBio = userData.bio || ''; // Retrieve bio
+                        currentIsVerified = userData.isVerified || false; 
+                        currentFollowers = userData.followers || [];
+                        currentFollowing = userData.following || [];
+
+                        renderProfileInfo(); 
+                        fetchAndDisplayUserTweets(currentUserId); 
+                    } else {
+                        // If user doc doesn't exist, try to get username from old 'usernames' collection
+                        const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
+                        if (!usernameQuery.empty) {
+                            const usernameDoc = usernameQuery.docs[0];
+                            currentUsername = usernameDoc.id;
+                            currentIsVerified = usernameDoc.data().isVerified || false; 
+
+                            // Migrate data to 'users' collection if it doesn't exist
+                            await db.collection('users').doc(user.uid).set({
+                                username: currentUsername,
+                                isVerified: currentIsVerified, 
+                                followers: [], 
+                                following: [],
+                                bio: '', // Initialize bio for new users
+                                profilePictureUrl: null,
+                                profileVideoUrl: null // Initialize profile video for new users
+                            }, { merge: true });
+
+                            renderProfileInfo();
+                            fetchAndDisplayUserTweets(currentUserId);
+                        } else {
+                            alert("Profile data not found. Please set up your username first.");
+                            window.location.href = 'index.html'; 
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching user profile data:", error);
+                    alert("Error loading profile. Please try logging in again.");
+                    window.location.href = 'index.html';
+                }
+            } else {
+                window.location.href = 'index.html'; 
+            }
+        });
+    </script>
+</body>
+</html>

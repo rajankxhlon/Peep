@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Verification - Twitter Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #1da1f2;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #333;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            margin-bottom: 25px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+        }
+
+        .upload-section {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 25px;
+            text-align: center;
+        }
+
+        .upload-section label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .custom-file-button {
+            background-color: #1da1f2;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .custom-file-button:hover {
+            background-color: #0d8ddb;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            display: none; /* Hidden by default */
+            object-fit: contain;
+        }
+
+        .submit-btn {
+            background-color: #28a745; /* Green for submit */
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+            margin-top: 20px;
+            width: auto;
+        }
+
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: center;
+            color: green;
+        }
+
+        .message.error {
+            color: red;
+        }
+
+        /* New styles for verification status */
+        .verification-status-section {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #eee;
+            margin-top: 30px;
+        }
+
+        .verified-user-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .verified-user-info .username {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        /* Icon styles */
+        .status-icon {
+            font-size: 2em;
+            vertical-align: middle;
+            margin-left: 5px; /* Space between username and icon */
+        }
+
+        .blue-tick {
+            color: #1da1f2; /* Blue for verified */
+        }
+
+        .info-icon {
+            color: #ffc107; /* Orange/Yellow for pending */
+        }
+
+        .status-message {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .status-message.success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-message.info {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        /* Hide elements when status is shown */
+        .hide-on-status {
+            display: none !important;
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                margin-top: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            h2 {
+                font-size: 18px;
+            }
+
+            .custom-file-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .submit-btn {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+
+            .verified-user-info .username {
+                font-size: 1.5em;
+            }
+
+            .status-icon {
+                font-size: 1.5em;
+            }
+
+            .status-message {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Request Verification</h1>
+        <p style="text-align: center; color: #66757f; margin-bottom: 25px;" id="initial-info">
+            To help maintain authenticity and trust on our platform, we require users seeking verification to adhere to the following guidelines and provide a face verification photo.
+        </p>
+
+        <div id="verification-status" class="verification-status-section" style="display: none;">
+            <div class="verified-user-info">
+                <span class="username" id="status-username"></span>
+                <i id="status-icon" class="status-icon"></i> </div>
+            <p id="status-message" class="status-message"></p>
+        </div>
+
+        <div id="request-form-content">
+            <h2>Verification Rules:</h2>
+            <ul>
+                <li>**Authenticity:** Your account must represent a real person, registered brand, or entity.</li>
+                <li>**Original Content:** Regularly post original content. Accounts primarily sharing third-party content without adding significant value may not be eligible.</li>
+                <li>**No Harmful Content:** Your account must not have a history of violating our policies, including posting harmful, hateful, or misleading content.</li>
+                <li>**No Misleading Posts:** Avoid any posts, profile information, or actions that are intended to mislead other users.</li>
+                <li>**Activity:** Your account should be active and regularly used.</li>
+                <li>**Profile Completeness:** Your profile must be complete with a profile picture, username, and bio.</li>
+            </ul>
+
+            <div class="upload-section">
+                <label for="face-picture-input">Upload a clear picture of your face for verification:</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="face-picture-input" accept="image/*">
+                    <button type="button" class="custom-file-button">
+                        <i class="fas fa-upload"></i> Choose Photo
+                    </button>
+                </div>
+                <img id="face-picture-preview" class="image-preview" src="#" alt="Face Picture Preview">
+                <p id="file-name" style="font-size: 0.9em; color: #66757f; margin-top: 10px;"></p>
+                <p id="error-message" class="message error" style="display: none;"></p>
+                <p id="success-message" class="message" style="display: none;"></p>
+
+                <button id="submit-request-btn" class="submit-btn">Submit Request</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase configuration (same as index.html, profile.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh9gNTXJYgcvt4vuiV5U0UqSeFhH8afcA",
+            authDomain: "yellowchat-ad31a.firebaseapp.com",
+            databaseURL: "https://yellowchat-ad31a-default-rtdb.firebaseio.com",
+            projectId: "yellowchat-ad31a",
+            storageBucket: "yellowchat-ad31a.firebasestorage.app",
+            messagingSenderId: "592543476537",
+            appId: "1:592543476537:web:10a2102227c06ac0d756e8",
+            measurementId: "G-2BZFXPKCHD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ImgBB API Key
+        const IMGBB_API_KEY = '7184e56bb0953c0545409c441c402a66';
+
+        // Get elements
+        const facePictureInput = document.getElementById('face-picture-input');
+        const facePicturePreview = document.getElementById('face-picture-preview');
+        const fileNameDisplay = document.getElementById('file-name');
+        const submitRequestBtn = document.getElementById('submit-request-btn');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+
+        const initialInfo = document.getElementById('initial-info');
+        const requestFormContent = document.getElementById('request-form-content');
+        const verificationStatusSection = document.getElementById('verification-status');
+        const statusUsername = document.getElementById('status-username');
+        const statusIcon = document.getElementById('status-icon'); // Get the new icon element
+        const statusMessage = document.getElementById('status-message');
+
+        let selectedFile = null;
+        let currentUserId = null;
+        let currentUsername = null;
+
+        // --- Helper Functions ---
+        function showMessage(element, message, isError = false) {
+            element.textContent = message;
+            element.style.display = 'block';
+            if (isError) {
+                element.classList.add('error');
+            } else {
+                element.classList.remove('error');
+            }
+            setTimeout(() => {
+                element.style.display = 'none';
+                element.textContent = '';
+            }, 5000); // Hide message after 5 seconds
+        }
+
+        async function uploadImageToImgBB(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    return data.data.url;
+                } else {
+                    throw new Error(data.error.message || 'ImgBB upload failed');
+                }
+            } catch (error) {
+                console.error("Error uploading image to ImgBB:", error);
+                showMessage(errorMessage, "Failed to upload image. Please try again.", true);
+                return null;
+            }
+        }
+
+        // Function to check user's verification status and pending requests
+        async function checkVerificationStatus() {
+            if (!currentUserId) {
+                // User not logged in, or currentUserId not yet set.
+                // This function will be called again once auth state is confirmed.
+                return;
+            }
+
+            try {
+                // 1. Check if user is already verified
+                const userDoc = await db.collection('users').doc(currentUserId).get();
+                if (userDoc.exists && userDoc.data().isVerified) {
+                    statusUsername.textContent = currentUsername || 'User';
+                    statusIcon.className = 'status-icon fas fa-check-circle blue-tick'; // Blue tick
+                    statusMessage.textContent = 'Congratulations! Your account is verified. You have the blue tick!';
+                    statusMessage.classList.add('success');
+                    initialInfo.classList.add('hide-on-status');
+                    requestFormContent.classList.add('hide-on-status');
+                    verificationStatusSection.style.display = 'block';
+                    return; // Stop here, user is verified
+                }
+
+                // 2. Check for pending verification requests
+                const pendingRequestQuery = await db.collection('verificationRequests')
+                                                    .where('userId', '==', currentUserId)
+                                                    .where('status', '==', 'pending')
+                                                    .get();
+
+                if (!pendingRequestQuery.empty) {
+                    statusUsername.textContent = currentUsername || 'User';
+                    statusIcon.className = 'status-icon fas fa-hourglass-half info-icon'; // Watch/hourglass icon
+                    statusMessage.textContent = 'Your verification request is currently in progress. Please be patient while we review it.';
+                    statusMessage.classList.add('info');
+                    initialInfo.classList.add('hide-on-status');
+                    requestFormContent.classList.add('hide-on-status');
+                    verificationStatusSection.style.display = 'block';
+                    return; // Stop here, request is pending
+                }
+
+                // If neither, then show the form to request verification
+                initialInfo.classList.remove('hide-on-status');
+                requestFormContent.classList.remove('hide-on-status');
+                verificationStatusSection.style.display = 'none';
+
+            } catch (error) {
+                console.error("Error checking verification status:", error);
+                showMessage(errorMessage, "Error checking verification status. Please try reloading the page.", true);
+                // In case of error, still show the form
+                initialInfo.classList.remove('hide-on-status');
+                requestFormContent.classList.remove('hide-on-status');
+                verificationStatusSection.style.display = 'none';
+            }
+        }
+
+        // --- Event Listeners ---
+        facePictureInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                fileNameDisplay.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    facePicturePreview.src = e.target.result;
+                    facePicturePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedFile = null;
+                fileNameDisplay.textContent = '';
+                facePicturePreview.src = '#';
+                facePicturePreview.style.display = 'none';
+            }
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        });
+
+        submitRequestBtn.addEventListener('click', async () => {
+            if (!currentUserId || !currentUsername) {
+                showMessage(errorMessage, "You must be logged in to submit a verification request.", true);
+                return;
+            }
+
+            if (!selectedFile) {
+                showMessage(errorMessage, "Please upload a picture for face verification.", true);
+                return;
+            }
+
+            submitRequestBtn.disabled = true;
+            submitRequestBtn.textContent = 'Submitting Request...';
+            showMessage(errorMessage, '', false); // Clear previous errors
+            showMessage(successMessage, '', false); // Clear previous success
+
+            try {
+                const imageUrl = await uploadImageToImgBB(selectedFile);
+
+                if (!imageUrl) {
+                    submitRequestBtn.textContent = 'Submit Request';
+                    submitRequestBtn.disabled = false;
+                    return; // Image upload failed, error message already shown
+                }
+
+                // Check again for pending request (race condition prevention)
+                const existingRequest = await db.collection('verificationRequests')
+                                                .where('userId', '==', currentUserId)
+                                                .where('status', '==', 'pending')
+                                                .get();
+
+                if (!existingRequest.empty) {
+                    showMessage(errorMessage, "You already have a pending verification request.", true);
+                    submitRequestBtn.textContent = 'Submit Request';
+                    submitRequestBtn.disabled = false;
+                    return;
+                }
+
+                // Submit request to Firestore
+                await db.collection('verificationRequests').add({
+                    userId: currentUserId,
+                    username: currentUsername,
+                    facePictureUrl: imageUrl,
+                    requestDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'pending' // pending, approved, rejected
+                });
+
+                showMessage(successMessage, "Your verification request has been submitted successfully! We will review it shortly.", false);
+                selectedFile = null;
+                facePictureInput.value = '';
+                fileNameDisplay.textContent = '';
+                facePicturePreview.src = '#';
+                facePicturePreview.style.display = 'none';
+
+                // After successful submission, update the UI to show pending status
+                checkVerificationStatus();
+
+            } catch (error) {
+                console.error("Error submitting verification request:", error);
+                showMessage(errorMessage, "Failed to submit verification request. Please try again.", true);
+            } finally {
+                submitRequestBtn.textContent = 'Submit Request';
+                submitRequestBtn.disabled = false;
+            }
+        });
+
+        // --- Authentication State Listener ---
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        currentUsername = userData.username;
+                    } else {
+                        // Fallback if user doc doesn't exist yet (should ideally be handled at signup)
+                        const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
+                        if (!usernameQuery.empty) {
+                            currentUsername = usernameQuery.docs[0].id;
+                        } else {
+                            alert("User profile not found. Please log in again.");
+                            window.location.href = 'index.html';
+                        }
+                    }
+                    // Once user data is loaded, check verification status
+                    checkVerificationStatus();
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    alert("Error loading user data. Please try logging in again.");
+                    window.location.href = 'index.html';
+                }
+            } else {
+                alert("You need to be logged in to access this page.");
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
