@@ -6,33 +6,33 @@
     <title>Peeps Reels</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* --- General Body & Layout --- */
         body {
             margin: 0;
             padding: 0;
             background-color: #000;
             display: flex;
-            flex-direction: column; /* Changed to column to stack nav and reels */
-            justify-content: flex-start; /* Align items to the start */
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden; /* Hide scrollbars, we'll manage scrolling with JS */
+            overflow: hidden;
             font-family: Arial, sans-serif;
             color: white;
         }
 
+        /* --- Reel Navigation (Top Bar) --- */
         .reel-navigation {
             position: fixed;
             top: 0;
             width: 100%;
             display: flex;
             justify-content: center;
-            /* CRUCIAL CHANGE: Add a background color to intercept clicks */
-            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+            background-color: rgba(0, 0, 0, 0.5);
             padding: 10px 0;
-            z-index: 20; /* Ensure it's above reels-container and overlay */
-            border-bottom: none; /* Changed: Removed border */
-            box-sizing: border-box; /* Include padding in width */
-            pointer-events: auto; /* Ensure the navigation div itself receives pointer events */
+            z-index: 20;
+            box-sizing: border-box;
+            pointer-events: auto;
         }
 
         .nav-btn {
@@ -44,7 +44,7 @@
             cursor: pointer;
             transition: color 0.3s ease, border-bottom 0.3s ease;
             font-weight: bold;
-            pointer-events: auto; /* Ensure buttons inside also receive pointer events */
+            pointer-events: auto;
         }
 
         .nav-btn.active {
@@ -56,6 +56,7 @@
             color: rgba(255, 255, 255, 0.8);
         }
 
+        /* --- Reels Container (Scrollable Video Feed) --- */
         .reels-container {
             width: 100%;
             height: 100vh;
@@ -69,9 +70,10 @@
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
             padding-top: 50px; /* Space for the navigation bar */
-            box-sizing: border-box; /* Include padding in height */
+            box-sizing: border-box;
         }
 
+        /* --- Individual Reel Item --- */
         .reel-item {
             flex-shrink: 0;
             flex-grow: 1;
@@ -92,6 +94,7 @@
             background-color: black;
         }
 
+        /* --- Reel Overlay (Content on top of video) --- */
         .reel-overlay {
             position: absolute;
             top: 0;
@@ -106,16 +109,22 @@
             background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.4) 100%);
         }
 
+        /* --- Reel Header (Back button, Language Menu button) --- */
         .reel-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-between; /* Space out items */
             align-items: center;
             width: 100%;
             padding-bottom: 10px;
-            padding-top: 10px; /* Added to account for the nav bar */
+            padding-top: 10px;
             box-sizing: border-box;
-            position: relative; /* ADDED: To allow z-index to work */
-            z-index: 25; /* ADDED: Higher than .reel-navigation */
+            position: relative;
+            z-index: 25;
+        }
+
+        .reel-header .left-section {
+            display: flex;
+            align-items: center;
         }
 
         .reel-header .back-btn {
@@ -131,6 +140,21 @@
             opacity: 0.8;
         }
 
+        .reel-header .menu-btn { /* Style for the new menu button */
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: auto; /* Push to the right */
+        }
+
+        .reel-header .menu-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* --- Sidebar (Like, Comment, Repost, Profile) --- */
         .reel-sidebar {
             display: flex;
             flex-direction: column;
@@ -163,7 +187,6 @@
         .sidebar-item.reposted i {
             color: #17bf63;
         }
-
 
         .sidebar-item .profile-pic-reel {
             width: 45px;
@@ -220,6 +243,7 @@
             to { transform: rotate(360deg); }
         }
 
+        /* --- Content Details (Username, Description) --- */
         .reel-content-details {
             position: absolute;
             left: 15px;
@@ -282,11 +306,11 @@
             text-overflow: ellipsis;
         }
 
-        /* New position and style for mute/unmute button */
+        /* --- Mute/Unmute Button --- */
         .mute-unmute-btn {
             position: absolute;
-            bottom: 20px; /* Moved lower */
-            left: 20px; /* Aligned to the left, below other content */
+            bottom: 20px;
+            left: 20px;
             background: rgba(0, 0, 0, 0.5);
             border-radius: 50%;
             width: 40px;
@@ -295,9 +319,9 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            z-index: 15; /* Ensure it's above other overlay elements if needed */
-            transition: visibility 0.5s, opacity 0.5s ease-in-out; /* Smooth transition for disappearance */
-            opacity: 1; /* Initially visible */
+            z-index: 15;
+            transition: visibility 0.5s, opacity 0.5s ease-in-out;
+            opacity: 1;
         }
 
         .mute-unmute-btn i {
@@ -309,10 +333,269 @@
         .mute-unmute-btn.hidden {
             opacity: 0;
             visibility: hidden;
-            pointer-events: none; /* Make it unclickable when hidden */
+            pointer-events: none;
+        }
+
+        /* --- Drawer Menu Styles (for global language filter) --- */
+        .drawer-menu {
+            position: fixed;
+            top: 0;
+            right: -300px; /* Hidden by default */
+            width: 250px;
+            height: 100%;
+            background-color: #1a1a1a; /* Dark background */
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+            transition: right 0.3s ease-in-out;
+            z-index: 30; /* Above everything else */
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto; /* Enable scrolling for many languages */
+        }
+
+        .drawer-menu.open {
+            right: 0; /* Slide in */
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .drawer-header h3 {
+            margin: 0;
+            color: white;
+            font-size: 18px;
+        }
+
+        .drawer-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .drawer-close-btn:hover {
+            opacity: 0.8;
+        }
+
+        .language-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .language-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            color: white;
+            font-size: 16px;
+        }
+
+        .language-item:hover {
+            background-color: #3a3a3a;
+        }
+
+        .language-item input[type="radio"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #bbb;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .language-item input[type="radio"]:checked {
+            border-color: #1da1f2;
+            background-color: #1da1f2; /* Fill the circle when checked */
+        }
+
+        .language-item input[type="radio"]:checked::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* --- Overlay to dim background when drawer/modal is open --- */
+        .drawer-backdrop, .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 29; /* Below drawer/modal, above other content */
+            display: none; /* Hidden by default */
+        }
+        .drawer-backdrop.active, .modal-backdrop.active {
+            display: block;
+        }
+
+        /* --- No Videos Message and Button Styling --- */
+        .no-videos-message {
+            text-align: center;
+            color: #66757f;
+            margin: auto;
+            padding-top: calc(50vh - 50px); /* Centers below nav bar */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%; /* Ensure it takes full height of container */
+            width: 100%;
+        }
+
+        .no-videos-message button {
+            background-color: #1da1f2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s ease;
+        }
+
+        .no-videos-message button:hover {
+            background-color: #0d8ddb;
+        }
+
+        /* --- More Options Modal (for individual reel) --- */
+        .more-options-modal {
+            position: fixed;
+            bottom: -200px; /* Hidden by default */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 300px;
+            background-color: #1a1a1a;
+            border-radius: 12px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+            transition: bottom 0.3s ease-out;
+            z-index: 35; /* Above backdrop and main drawer */
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .more-options-modal.open {
+            bottom: 20px; /* Slide in from bottom */
+        }
+
+        .more-options-modal button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            padding: 12px 15px;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .more-options-modal button:hover {
+            background-color: #2a2a2a;
+        }
+
+        .more-options-modal button.delete-btn {
+            color: #e0245e;
+            font-weight: bold;
+        }
+        .more-options-modal button.delete-btn:hover {
+            background-color: rgba(224, 36, 94, 0.1);
+        }
+
+        /* --- Reel Language Modal (for individual reel language change) --- */
+        .reel-language-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 350px;
+            background-color: #1a1a1a;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            z-index: 40; /* Highest z-index */
+            padding: 20px;
+            box-sizing: border-box;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+        }
+
+        .reel-language-modal.open {
+            display: flex;
+        }
+
+        .reel-language-modal h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .reel-language-modal .language-options {
+            max-height: 300px; /* Limit height for scrolling */
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .reel-language-modal .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .reel-language-modal .action-buttons button {
+            background-color: #3a3a3a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .reel-language-modal .action-buttons button:hover {
+            background-color: #555;
+        }
+
+        .reel-language-modal .action-buttons button.confirm-btn {
+            background-color: #1da1f2;
+        }
+        .reel-language-modal .action-buttons button.confirm-btn:hover {
+            background-color: #0d8ddb;
         }
 
 
+        /* --- Media Queries for Responsiveness --- */
         @media (max-width: 600px) {
             .reel-overlay {
                 padding: 10px;
@@ -369,6 +652,15 @@
             .reel-header {
                 padding-top: 5px;
             }
+            .drawer-menu {
+                width: 200px; /* Smaller width for mobile */
+            }
+            .no-videos-message {
+                padding-top: calc(50vh - 45px);
+            }
+            .more-options-modal {
+                width: 95%;
+            }
         }
     </style>
 </head>
@@ -379,11 +671,92 @@
     </div>
 
     <div class="reels-container" id="reels-container">
+    </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <div class="drawer-menu" id="drawerMenu">
+        <div class="drawer-header">
+            <h3>Filter by Language</h3>
+            <button class="drawer-close-btn" id="drawerCloseBtn"><i class="fas fa-times"></i></button>
         </div>
+        <div class="language-options" id="languageOptions">
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="all" checked>
+                <span>All Languages</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="english">
+                <span>English</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="hindi">
+                <span>Hindi</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="punjabi">
+                <span>Punjabi</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="gujarati">
+                <span>Gujarati</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="bengali">
+                <span>Bengali</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="tamil">
+                <span>Tamil</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="telugu">
+                <span>Telugu</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="kannada">
+                <span>Kannada</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="malayalam">
+                <span>Malayalam</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="marathi">
+                <span>Marathi</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="urdu">
+                <span>Urdu</span>
+            </label>
+            <label class="language-item">
+                <input type="radio" name="videoLanguage" value="other">
+                <span>Other</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+
+    <div class="more-options-modal" id="moreOptionsModal">
+        <button id="changeReelLanguageBtn">Change Reel Language</button>
+        <button class="delete-btn" id="deleteReelBtn">Delete Reel</button>
+        <button id="cancelModalBtn">Cancel</button>
+    </div>
+
+    <div class="reel-language-modal" id="reelLanguageModal">
+        <h3>Change Reel Language</h3>
+        <div class="language-options" id="reelLanguageOptions">
+            </div>
+        <div class="action-buttons">
+            <button id="cancelReelLanguageBtn">Cancel</button>
+            <button class="confirm-btn" id="confirmReelLanguageBtn">Update Language</button>
+        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
     <script>
         // Your Firebase configuration (same as home.html)
@@ -404,16 +777,53 @@
         // Firebase services
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage(); // Initialize storage
 
         const reelsContainer = document.getElementById('reels-container');
         const forYouBtn = document.getElementById('forYouBtn');
         const followingBtn = document.getElementById('followingBtn');
+        const drawerMenu = document.getElementById('drawerMenu');
+        const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+        const drawerBackdrop = document.getElementById('drawerBackdrop');
+        const languageOptions = document.getElementById('languageOptions');
+
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const moreOptionsModal = document.getElementById('moreOptionsModal');
+        const deleteReelBtn = document.getElementById('deleteReelBtn');
+        const changeReelLanguageBtn = document.getElementById('changeReelLanguageBtn');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+
+        const reelLanguageModal = document.getElementById('reelLanguageModal');
+        const reelLanguageOptions = document.getElementById('reelLanguageOptions');
+        const cancelReelLanguageBtn = document.getElementById('cancelReelLanguageBtn');
+        const confirmReelLanguageBtn = document.getElementById('confirmReelLanguageBtn');
 
         let currentUserId = null;
         let currentUsername = null;
-        let following = new Set(); // Store usernames the current user is following
-        let isMutedGlobally = true; // Track global mute state
-        let currentView = 'forYou'; // Default view
+        let following = new Set();
+        let isMutedGlobally = true;
+        let currentView = 'forYou';
+        let currentReelForEdit = null; // Stores the tweet object of the reel being edited
+
+        // Retrieve selected language from localStorage or default to 'all'
+        let selectedLanguage = localStorage.getItem('selectedVideoLanguage') || 'all';
+
+        // All available languages (for both filter and reel editing)
+        const ALL_LANGUAGES = [
+            { value: 'all', label: 'All Languages' },
+            { value: 'english', label: 'English' },
+            { value: 'hindi', label: 'Hindi' },
+            { value: 'punjabi', label: 'Punjabi' },
+            { value: 'gujarati', label: 'Gujarati' },
+            { value: 'bengali', label: 'Bengali' },
+            { value: 'tamil', label: 'Tamil' },
+            { value: 'telugu', label: 'Telugu' },
+            { value: 'kannada', label: 'Kannada' },
+            { value: 'malayalam', label: 'Malayalam' },
+            { value: 'marathi', label: 'Marathi' },
+            { value: 'urdu', label: 'Urdu' },
+            { value: 'other', label: 'Other' }
+        ];
 
         // Function to create the verified tick SVG element (reused from home.html)
         function createVerifiedTickSvg() {
@@ -448,7 +858,7 @@
         async function toggleFollow(targetUsername, targetUserId, buttonElement) {
             if (!currentUserId || !currentUsername) {
                 alert("You must be logged in to follow/unfollow users.");
-                window.location.href = 'index.html'; // Redirect to login
+                window.location.href = 'index.html';
                 return;
             }
 
@@ -462,21 +872,18 @@
 
             try {
                 if (following.has(targetUsername)) {
-                    // Unfollow
                     await userRef.update({ following: firebase.firestore.FieldValue.arrayRemove(targetUsername) });
                     await targetUserRef.update({ followers: firebase.firestore.FieldValue.arrayRemove(currentUsername) });
                     following.delete(targetUsername);
                     buttonElement.textContent = 'Follow';
                     buttonElement.classList.remove('unfollow');
                 } else {
-                    // Follow
                     await userRef.update({ following: firebase.firestore.FieldValue.arrayUnion(targetUsername) });
                     await targetUserRef.update({ followers: firebase.firestore.FieldValue.arrayUnion(currentUsername) });
                     following.add(targetUsername);
                     buttonElement.textContent = 'Unfollow';
                     buttonElement.classList.add('unfollow');
 
-                    // Create/Update follow notification
                     try {
                         const existingNotificationQuery = await db.collection('notifications')
                             .where('type', '==', 'follow')
@@ -536,52 +943,62 @@
             const overlay = document.createElement('div');
             overlay.classList.add('reel-overlay');
 
-            // Header (Back button only)
+            // Header (Back button and new Menu button)
             const reelHeader = document.createElement('div');
             reelHeader.classList.add('reel-header');
+
+            const leftHeaderSection = document.createElement('div');
+            leftHeaderSection.classList.add('left-section');
 
             const backButton = document.createElement('button');
             backButton.classList.add('back-btn');
             backButton.innerHTML = '<i class="fas fa-arrow-left"></i>';
             backButton.addEventListener('click', () => window.history.back());
-            reelHeader.appendChild(backButton);
-            overlay.appendChild(reelHeader); // Append header to overlay
+            leftHeaderSection.appendChild(backButton);
+            reelHeader.appendChild(leftHeaderSection);
 
-            // Mute/Unmute Button (Moved here)
+            // New Menu Button (for global language selection filter)
+            const menuButton = document.createElement('button');
+            menuButton.classList.add('menu-btn');
+            menuButton.innerHTML = '<i class="fas fa-bars"></i>'; // Hamburger icon
+            menuButton.addEventListener('click', () => {
+                drawerMenu.classList.add('open');
+                drawerBackdrop.classList.add('active');
+            });
+            reelHeader.appendChild(menuButton);
+
+            overlay.appendChild(reelHeader);
+
+            // Mute/Unmute Button
             const muteUnmuteButton = document.createElement('div');
             muteUnmuteButton.classList.add('mute-unmute-btn');
             const muteUnmuteIcon = document.createElement('i');
             muteUnmuteIcon.classList.add('fas', isMutedGlobally ? 'fa-volume-mute' : 'fa-volume-up');
             muteUnmuteButton.appendChild(muteUnmuteIcon);
 
-            // Add 'hidden' class initially if not muted globally (unlikely on load, but for consistency)
             if (!isMutedGlobally) {
                 muteUnmuteButton.classList.add('hidden');
             }
 
             muteUnmuteButton.addEventListener('click', () => {
                 isMutedGlobally = !isMutedGlobally;
-                // Update icon
                 if (isMutedGlobally) {
                     muteUnmuteIcon.classList.replace('fa-volume-up', 'fa-volume-mute');
-                    muteUnmuteButton.classList.remove('hidden'); // Show if re-muting
+                    muteUnmuteButton.classList.remove('hidden');
                 } else {
                     muteUnmuteIcon.classList.replace('fa-volume-mute', 'fa-volume-up');
-                    muteUnmuteButton.classList.add('hidden'); // Hide if unmuting
+                    muteUnmuteButton.classList.add('hidden');
                 }
 
-                // Apply to all videos that are currently visible/playing or in the DOM
                 document.querySelectorAll('.reel-video').forEach(vid => {
                     vid.muted = isMutedGlobally;
                 });
 
-                // If a video is currently playing, ensure its state is updated
                 if (currentlyPlayingVideo) {
                     currentlyPlayingVideo.muted = isMutedGlobally;
                 }
             });
-            overlay.appendChild(muteUnmuteButton); // Append directly to overlay, not header
-
+            overlay.appendChild(muteUnmuteButton);
 
             // Sidebar (Profile, Like, Comment, Repost, More, Spinning Disk)
             const reelSidebar = document.createElement('div');
@@ -660,7 +1077,7 @@
             const commentItem = document.createElement('a');
             commentItem.classList.add('sidebar-item', 'comment-btn');
             commentItem.href = `reply.html?tweetId=${tweet.id}`;
-            commentItem.innerHTML = `<i class="far fa-comment"></i>`; // Removed <span>${tweet.replyCount || 0}</span>
+            commentItem.innerHTML = `<i class="far fa-comment"></i>`;
             reelSidebar.appendChild(commentItem);
 
             // Repost Button
@@ -710,12 +1127,20 @@
             reelSidebar.appendChild(repostItem);
 
 
-            // More (Three Dots)
+            // More (Three Dots) - This is where the magic happens for owner-specific actions
             const moreItem = document.createElement('div');
             moreItem.classList.add('sidebar-item');
             moreItem.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
             moreItem.addEventListener('click', () => {
-                alert('More options for this video (not yet implemented)');
+                if (currentUserId && tweet.userId === currentUserId) {
+                    // It's the current user's reel, show specific options
+                    currentReelForEdit = tweet; // Store the reel data
+                    moreOptionsModal.classList.add('open');
+                    modalBackdrop.classList.add('active');
+                } else {
+                    // Default options for other users' reels (or just an alert for now)
+                    alert('More options for this video (reporting, sharing, etc. - not yet implemented)');
+                }
             });
             reelSidebar.appendChild(moreItem);
 
@@ -736,7 +1161,7 @@
 
             overlay.appendChild(reelSidebar);
 
-            // Content Details (Username, Description, Follow Button)
+            // Content Details (Username, Description)
             const contentDetails = document.createElement('div');
             contentDetails.classList.add('reel-content-details');
 
@@ -806,13 +1231,12 @@
         const videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const video = entry.target;
-                const muteButton = video.closest('.reel-item').querySelector('.mute-unmute-btn'); // Get the mute button for this video
+                const muteButton = video.closest('.reel-item').querySelector('.mute-unmute-btn');
 
                 if (entry.isIntersecting) {
                     if (currentlyPlayingVideo && currentlyPlayingVideo !== video) {
                         currentlyPlayingVideo.pause();
                         currentlyPlayingVideo.currentTime = 0;
-                        // Show mute button for the previously playing video if it was unmuted
                         const prevMuteButton = currentlyPlayingVideo.closest('.reel-item').querySelector('.mute-unmute-btn');
                         if (prevMuteButton) {
                             prevMuteButton.classList.remove('hidden');
@@ -824,12 +1248,11 @@
                     });
                     currentlyPlayingVideo = video;
 
-                    // Update mute button visibility for the new video
                     if (muteButton) {
                         if (isMutedGlobally) {
-                            muteButton.classList.remove('hidden'); // Show if muted
+                            muteButton.classList.remove('hidden');
                         } else {
-                            muteButton.classList.add('hidden'); // Hide if already unmuted
+                            muteButton.classList.add('hidden');
                         }
                     }
 
@@ -838,7 +1261,6 @@
                         video.pause();
                         video.currentTime = 0;
                         currentlyPlayingVideo = null;
-                        // Show mute button when video scrolls out of view (if it was unmuted)
                         if (muteButton) {
                             muteButton.classList.remove('hidden');
                         }
@@ -847,16 +1269,22 @@
             });
         }, videoObserverOptions);
 
-
-        // Function to fetch and display videos (reels) based on view
+        // Function to fetch and display videos (reels) based on view and selected language
         async function fetchAndDisplayReels(view) {
-            // Stop any currently playing video before clearing the container
+            // Stop and reset current video before loading new ones
             if (currentlyPlayingVideo) {
                 currentlyPlayingVideo.pause();
                 currentlyPlayingVideo.currentTime = 0;
                 currentlyPlayingVideo = null;
             }
-            reelsContainer.innerHTML = '<p style="text-align: center; color: #66757f; margin: auto; padding-top: 50vh;">Loading videos...</p>';
+            // Clear existing reels and display loading message
+            reelsContainer.innerHTML = '<div class="no-videos-message">Loading videos...</div>';
+            
+            // Unobserve all videos before clearing the container to prevent errors
+            reelsContainer.querySelectorAll('.reel-video').forEach(video => {
+                videoObserver.unobserve(video);
+            });
+
             try {
                 const tweetsSnapshot = await db.collection('tweets').get();
                 let videoTweets = [];
@@ -865,14 +1293,17 @@
                 tweetsSnapshot.forEach(doc => {
                     const tweet = { id: doc.id, ...doc.data() };
                     if (tweet.videoUrl) {
-                        // Filter based on the current view
-                        if (view === 'forYou') {
-                            videoTweets.push(tweet);
-                        } else if (view === 'following' && currentUsername && following.has(tweet.username)) {
-                            videoTweets.push(tweet);
+                        const meetsLanguageCriteria = (selectedLanguage === 'all' || (tweet.videoLanguage && tweet.videoLanguage.toLowerCase() === selectedLanguage));
+
+                        if (meetsLanguageCriteria) {
+                            if (view === 'forYou') {
+                                videoTweets.push(tweet);
+                            } else if (view === 'following' && currentUsername && following.has(tweet.username)) {
+                                videoTweets.push(tweet);
+                            }
                         }
 
-                        // Collect user IDs for caching
+                        // Collect unique user IDs to fetch their data efficiently
                         if (!usersCache[tweet.userId]) {
                             userPromises.push(db.collection('users').doc(tweet.userId).get());
                         }
@@ -883,13 +1314,31 @@
                     let message = 'No videos found.';
                     if (view === 'following') {
                         message = 'No videos from users you follow. Follow more people to see their reels here!';
+                    } else if (selectedLanguage !== 'all') {
+                        message = `No videos found for '${selectedLanguage}' language. Try another language or "All Languages".`;
                     } else {
                         message = 'No videos found. Be the first to share a video!';
                     }
-                    reelsContainer.innerHTML = `<p style="text-align: center; color: #66757f; margin: auto; padding-top: 50vh;">${message}</p>`;
+                    
+                    reelsContainer.innerHTML = `
+                        <div class="no-videos-message">
+                            <p>${message}</p>
+                            ${selectedLanguage !== 'all' ? '<button id="changeLanguageBtn">Change Language</button>' : ''}
+                        </div>
+                    `;
+
+                    // Add event listener for the new button if it exists
+                    const changeLanguageBtn = document.getElementById('changeLanguageBtn');
+                    if (changeLanguageBtn) {
+                        changeLanguageBtn.addEventListener('click', () => {
+                            drawerMenu.classList.add('open');
+                            drawerBackdrop.classList.add('active');
+                        });
+                    }
                     return;
                 }
 
+                // Fetch all unique user data
                 const userDocs = await Promise.all(userPromises);
                 userDocs.forEach(userDoc => {
                     if (userDoc.exists) {
@@ -899,7 +1348,7 @@
 
                 shuffleArray(videoTweets);
 
-                reelsContainer.innerHTML = '';
+                reelsContainer.innerHTML = ''; // Clear loading message
 
                 for (const tweet of videoTweets) {
                     const tweetAuthorData = usersCache[tweet.userId] || null;
@@ -913,6 +1362,7 @@
                     }
                 }
 
+                // Autoplay the first video after loading
                 setTimeout(() => {
                     reelsContainer.scrollTo({
                         top: 0,
@@ -921,7 +1371,7 @@
 
                     if (reelsContainer.children.length > 0) {
                         const firstVideo = reelsContainer.querySelector('.reel-video');
-                        const firstMuteButton = reelsContainer.querySelector('.mute-unmute-btn'); // Get the first mute button
+                        const firstMuteButton = reelsContainer.querySelector('.mute-unmute-btn');
 
                         if (firstVideo) {
                             firstVideo.muted = isMutedGlobally;
@@ -930,7 +1380,6 @@
                             });
                             currentlyPlayingVideo = firstVideo;
 
-                            // Set initial visibility for the first video's mute button
                             if (firstMuteButton) {
                                 if (isMutedGlobally) {
                                     firstMuteButton.classList.remove('hidden');
@@ -944,7 +1393,20 @@
 
             } catch (error) {
                 console.error("Error fetching video tweets:", error);
-                reelsContainer.innerHTML = '<p style="text-align: center; color: red; margin: auto; padding-top: 50vh;">Error loading videos. Please try again.</p>';
+                reelsContainer.innerHTML = `
+                    <div class="no-videos-message">
+                        <p style="color: red;">Error loading videos. Please try again.</p>
+                        <button id="changeLanguageBtn">Change Language</button>
+                    </div>
+                `;
+                // Add event listener for the new button on error
+                const changeLanguageBtn = document.getElementById('changeLanguageBtn');
+                if (changeLanguageBtn) {
+                    changeLanguageBtn.addEventListener('click', () => {
+                        drawerMenu.classList.add('open');
+                        drawerBackdrop.classList.add('active');
+                    });
+                }
             }
         }
 
@@ -956,7 +1418,35 @@
             }
         }
 
-        // Event listeners for navigation buttons
+        // Function to update the radio button state in the main language filter drawer
+        function updateMainLanguageRadio() {
+            const radioButtons = languageOptions.querySelectorAll('input[name="videoLanguage"]');
+            radioButtons.forEach(radio => {
+                if (radio.value === selectedLanguage) {
+                    radio.checked = true;
+                } else {
+                    radio.checked = false;
+                }
+            });
+        }
+
+        // Function to populate and update the reel-specific language modal
+        function populateReelLanguageModal(currentReelLanguage) {
+            reelLanguageOptions.innerHTML = ''; // Clear previous options
+            ALL_LANGUAGES.filter(lang => lang.value !== 'all').forEach(lang => { // Exclude 'All Languages' for single reel
+                const label = document.createElement('label');
+                label.classList.add('language-item');
+                label.innerHTML = `
+                    <input type="radio" name="reelSpecificLanguage" value="${lang.value}" ${lang.value === currentReelLanguage ? 'checked' : ''}>
+                    <span>${lang.label}</span>
+                `;
+                reelLanguageOptions.appendChild(label);
+            });
+        }
+
+        // --- Event Listeners ---
+
+        // Navigation buttons
         forYouBtn.addEventListener('click', () => {
             if (currentView !== 'forYou') {
                 currentView = 'forYou';
@@ -975,6 +1465,139 @@
             }
         });
 
+        // Main Language Filter Drawer
+        drawerCloseBtn.addEventListener('click', () => {
+            drawerMenu.classList.remove('open');
+            drawerBackdrop.classList.remove('active');
+        });
+
+        drawerBackdrop.addEventListener('click', () => {
+            drawerMenu.classList.remove('open');
+            drawerBackdrop.classList.remove('active');
+        });
+
+        languageOptions.addEventListener('change', (event) => {
+            if (event.target.name === 'videoLanguage') {
+                selectedLanguage = event.target.value;
+                // Save the selected language to localStorage
+                localStorage.setItem('selectedVideoLanguage', selectedLanguage);
+                console.log("Selected language saved:", selectedLanguage);
+                drawerMenu.classList.remove('open');
+                drawerBackdrop.classList.remove('active');
+                fetchAndDisplayReels(currentView); // Re-fetch reels with new language filter
+            }
+        });
+
+        // More Options Modal (Delete/Change Language)
+        cancelModalBtn.addEventListener('click', () => {
+            moreOptionsModal.classList.remove('open');
+            modalBackdrop.classList.remove('active');
+            currentReelForEdit = null; // Clear the stored reel
+        });
+
+        modalBackdrop.addEventListener('click', () => {
+            // Close all modals/drawers when backdrop is clicked
+            moreOptionsModal.classList.remove('open');
+            reelLanguageModal.classList.remove('open');
+            drawerMenu.classList.remove('open');
+            modalBackdrop.classList.remove('active');
+            drawerBackdrop.classList.remove('active'); // Ensure main drawer backdrop closes too
+            currentReelForEdit = null;
+        });
+
+        deleteReelBtn.addEventListener('click', async () => {
+            if (!currentReelForEdit || !currentUserId || currentReelForEdit.userId !== currentUserId) {
+                alert("Error: Cannot delete this reel.");
+                return;
+            }
+
+            const confirmDelete = confirm("Are you sure you want to permanently delete this reel? This action cannot be undone.");
+
+            if (confirmDelete) {
+                try {
+                    // 1. Delete video from Firebase Storage
+                    if (currentReelForEdit.videoUrl) {
+                        const videoRef = storage.refFromURL(currentReelForEdit.videoUrl);
+                        await videoRef.delete();
+                        console.log("Video deleted from storage:", currentReelForEdit.videoUrl);
+                    }
+
+                    // 2. Delete tweet document from Firestore
+                    await db.collection('tweets').doc(currentReelForEdit.id).delete();
+                    console.log("Reel document deleted:", currentReelForEdit.id);
+
+                    // 3. Delete related notifications
+                    const notificationsRef = db.collection('notifications');
+                    const relatedNotificationsSnapshot = await notificationsRef
+                        .where('tweetId', '==', currentReelForEdit.id)
+                        .get();
+
+                    const batch = db.batch();
+                    relatedNotificationsSnapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log("Related notifications deleted for tweet:", currentReelForEdit.id);
+
+                    alert("Reel deleted successfully!");
+                    moreOptionsModal.classList.remove('open');
+                    modalBackdrop.classList.remove('active');
+                    currentReelForEdit = null; // Clear the stored reel
+                    fetchAndDisplayReels(currentView); // Refresh reels after deletion
+                } catch (error) {
+                    console.error("Error deleting reel:", error);
+                    alert("Failed to delete reel. Please try again.");
+                }
+            }
+        });
+
+        changeReelLanguageBtn.addEventListener('click', () => {
+            if (!currentReelForEdit) {
+                alert("No reel selected for language change.");
+                return;
+            }
+            moreOptionsModal.classList.remove('open'); // Close the initial options modal
+            populateReelLanguageModal(currentReelForEdit.videoLanguage || 'all'); // Populate and pre-select
+            reelLanguageModal.classList.add('open'); // Open the language selection modal
+            modalBackdrop.classList.add('active'); // Ensure backdrop is active
+        });
+
+        // Reel Language Selection Modal
+        cancelReelLanguageBtn.addEventListener('click', () => {
+            reelLanguageModal.classList.remove('open');
+            modalBackdrop.classList.remove('active');
+            currentReelForEdit = null; // Clear the stored reel
+        });
+
+        confirmReelLanguageBtn.addEventListener('click', async () => {
+            if (!currentReelForEdit || !currentUserId || currentReelForEdit.userId !== currentUserId) {
+                alert("Error: Cannot update language for this reel.");
+                return;
+            }
+
+            const selectedRadio = reelLanguageOptions.querySelector('input[name="reelSpecificLanguage"]:checked');
+            if (!selectedRadio) {
+                alert("Please select a language.");
+                return;
+            }
+
+            const newLanguage = selectedRadio.value;
+
+            try {
+                const tweetRef = db.collection('tweets').doc(currentReelForEdit.id);
+                await tweetRef.update({ videoLanguage: newLanguage });
+                console.log(`Reel ${currentReelForEdit.id} language updated to: ${newLanguage}`);
+                alert(`Reel language updated to '${newLanguage.charAt(0).toUpperCase() + newLanguage.slice(1)}' successfully!`);
+
+                reelLanguageModal.classList.remove('open');
+                modalBackdrop.classList.remove('active');
+                currentReelForEdit = null; // Clear the stored reel
+                fetchAndDisplayReels(currentView); // Refresh reels after language change
+            } catch (error) {
+                console.error("Error updating reel language:", error);
+                alert("Failed to update reel language. Please try again.");
+            }
+        });
 
         // Check authentication state on page load
         auth.onAuthStateChanged(async (user) => {
@@ -985,20 +1608,23 @@
                     if (userDoc.exists && userDoc.data().username) {
                         currentUsername = userDoc.data().username;
                         await fetchFollowingList(currentUserId);
-                        // Initial load of reels based on default view
+                        // Update the UI for the selected language on load
+                        updateMainLanguageRadio();
                         fetchAndDisplayReels(currentView);
                     } else {
+                        // Redirect to index.html if user data is incomplete
                         window.location.href = 'index.html';
                     }
                 } catch (error) {
                     console.error("Error fetching current user data:", error);
+                    // Redirect to index.html on error fetching user data
                     window.location.href = 'index.html';
                 }
             } else {
+                // Redirect to index.html if not logged in
                 window.location.href = 'index.html';
             }
         });
-
     </script>
 </body>
 </html>
