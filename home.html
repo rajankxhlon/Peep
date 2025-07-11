@@ -27,17 +27,97 @@
             padding: 15px; /* Consistent padding for the main area */
             box-sizing: border-box;
             width: 100%; /* Ensure main content uses full width */
+            padding-bottom: 70px; /* Space for the floating button */
         }
 
-        /* --- Tweet Composer Section --- */
-        .tweet-composer {
-            background-color: #ffffff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        /* --- Floating Action Button (FAB) --- */
+        .fab-button {
+            position: fixed;
+            bottom: 75px; /* Adjust based on footer height + desired spacing */
+            right: 20px;
+            background-color: #1da1f2;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 55px; /* Slightly larger for visibility */
+            height: 55px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1001; /* Above footer */
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .fab-button:hover {
+            background-color: #0d8ddb;
+        }
+
+        /* --- Modal Overlay & Content --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 450px; /* Match container max-width */
-            margin-bottom: 20px; /* Space below composer */
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002; /* Above FAB */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px; /* Slightly larger for modal content */
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+            position: relative; /* For close button positioning */
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .modal-close-btn:hover {
+            color: #333;
+        }
+
+        /* --- Tweet Composer Section (Now inside modal) --- */
+        .tweet-composer {
+            background-color: #ffffff; /* Keep background white */
+            padding: 0; /* Remove padding as modal-content has it */
+            border-radius: 8px; /* Already applied by modal-content */
+            box-shadow: none; /* Already applied by modal-content */
+            width: 100%;
+            max-width: none; /* Allow it to fill modal-content */
+            margin-bottom: 0;
             box-sizing: border-box;
         }
 
@@ -126,6 +206,7 @@
             display: flex;
             justify-content: flex-end; /* Push tweet button to the right */
             align-items: center;
+            margin-top: 15px; /* Space above tweet button */
         }
 
         #image-preview,
@@ -521,53 +602,61 @@
     </header>
 
     <div class="main-content">
-        <div class="tweet-composer">
-            <textarea id="tweet-input" placeholder="What's happening?"></textarea>
-
-            <img id="image-preview" src="#" alt="Image Preview">
-            <video id="video-preview" src="#" controls muted loop alt="Video Preview"></video>
-            
-            <div class="progress-container" id="video-upload-progress-container">
-                <div class="progress-bar" id="video-upload-progress-bar">0%</div>
-            </div>
-
-            <div class="composer-options">
-                <input type="file" id="image-upload-input" accept="image/*" class="hidden-file-input">
-                <label for="image-upload-input" class="camera-upload-btn">
-                    <i class="fas fa-camera"></i>
-                </label>
-                <input type="file" id="video-upload-input" accept="video/*" class="hidden-file-input">
-                <label for="video-upload-input" class="video-upload-btn">
-                    <i class="fas fa-video"></i>
-                </label>
-                <input type="text" id="link-input" placeholder="Add a link (e.g., https://example.com)">
-
-                <select id="video-language-select" class="video-language-select">
-                    <option value="">Select Video Language</option>
-                    <option value="english">English</option>
-                    <option value="hindi">Hindi</option>
-                    <option value="punjabi">Punjabi</option>
-                    <option value="gujarati">Gujarati</option>
-                    <option value="bengali">Bengali</option>
-                    <option value="tamil">Tamil</option>
-                    <option value="telugu">Telugu</option>
-                    <option value="kannada">Kannada</option>
-                    <option value="malayalam">Malayalam</option>
-                    <option value="marathi">Marathi</option>
-                    <option value="urdu">Urdu</option>
-                    <option value="other">Other</option>
-                </select>
-                <button id="upload-video-button" style="display: none;">Upload Video</button>
-                <span id="upload-status"></span>
-            </div>
-
-            <div class="composer-footer">
-                <button id="tweet-btn">Post</button>
-            </div>
-        </div>
-
         <div class="tweets-feed" id="tweets-feed">
             <p style="text-align: center; color: #66757f;">Loading peeps...</p>
+        </div>
+    </div>
+
+    <button class="fab-button" id="open-composer-fab">
+        <i class="fas fa-feather-alt"></i> </button>
+
+    <div class="modal-overlay" id="tweet-composer-modal">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="close-composer-modal">&times;</button>
+            <div class="tweet-composer">
+                <textarea id="tweet-input" placeholder="What's happening?"></textarea>
+
+                <img id="image-preview" src="#" alt="Image Preview">
+                <video id="video-preview" src="#" controls muted loop alt="Video Preview"></video>
+                
+                <div class="progress-container" id="video-upload-progress-container">
+                    <div class="progress-bar" id="video-upload-progress-bar">0%</div>
+                </div>
+
+                <div class="composer-options">
+                    <input type="file" id="image-upload-input" accept="image/*" class="hidden-file-input">
+                    <label for="image-upload-input" class="camera-upload-btn">
+                        <i class="fas fa-camera"></i>
+                    </label>
+                    <input type="file" id="video-upload-input" accept="video/*" class="hidden-file-input">
+                    <label for="video-upload-input" class="video-upload-btn">
+                        <i class="fas fa-video"></i>
+                    </label>
+                    <input type="text" id="link-input" placeholder="Add a link (e.g., https://example.com)">
+
+                    <select id="video-language-select" class="video-language-select">
+                        <option value="">Select Video Language</option>
+                        <option value="english">English</option>
+                        <option value="hindi">Hindi</option>
+                        <option value="punjabi">Punjabi</option>
+                        <option value="gujarati">Gujarati</option>
+                        <option value="bengali">Bengali</option>
+                        <option value="tamil">Tamil</option>
+                        <option value="telugu">Telugu</option>
+                        <option value="kannada">Kannada</option>
+                        <option value="malayalam">Malayalam</option>
+                        <option value="marathi">Marathi</option>
+                        <option value="urdu">Urdu</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <button id="upload-video-button" style="display: none;">Upload Video</button>
+                    <span id="upload-status"></span>
+                </div>
+
+                <div class="composer-footer">
+                    <button id="tweet-btn">Post</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -636,6 +725,11 @@
         const uploadVideoButton = document.getElementById('upload-video-button'); // New button
         const videoUploadProgressBarContainer = document.getElementById('video-upload-progress-container'); // New progress container
         const videoUploadProgressBar = document.getElementById('video-upload-progress-bar'); // New progress bar
+
+        // Modal elements
+        const openComposerFab = document.getElementById('open-composer-fab');
+        const tweetComposerModal = document.getElementById('tweet-composer-modal');
+        const closeComposerModal = document.getElementById('close-composer-modal');
 
 
         let currentUsername = null;
@@ -1480,7 +1574,41 @@
             }
         });
 
-        // --- Tweet Post Functionality ---
+        // --- Modal Functionality ---
+        openComposerFab.addEventListener('click', () => {
+            tweetComposerModal.classList.add('active');
+            // Reset composer state when opening the modal
+            tweetInput.value = '';
+            imageUploadInput.value = '';
+            imagePreview.style.display = 'none';
+            imagePreview.src = '#';
+            videoUploadInput.value = '';
+            videoPreview.style.display = 'none';
+            videoPreview.src = '#';
+            videoPreview.pause();
+            linkInput.value = '';
+            uploadedImageUrl = null;
+            uploadedVideoUrl = null;
+            pendingVideoFile = null;
+            uploadStatus.textContent = '';
+            videoLanguageSelect.value = '';
+            uploadVideoButton.style.display = 'none';
+            videoUploadProgressBarContainer.style.display = 'none';
+            tweetBtn.disabled = false; // Ensure it's enabled when modal opens
+        });
+
+        closeComposerModal.addEventListener('click', () => {
+            tweetComposerModal.classList.remove('active');
+        });
+
+        // Close modal if clicking outside the content
+        tweetComposerModal.addEventListener('click', (e) => {
+            if (e.target === tweetComposerModal) {
+                tweetComposerModal.classList.remove('active');
+            }
+        });
+
+        // --- Tweet Post Functionality (Remains largely the same) ---
         tweetBtn.addEventListener('click', async () => {
             const tweetContent = tweetInput.value.trim();
             const tweetLink = linkInput.value.trim();
@@ -1569,6 +1697,9 @@
                 uploadVideoButton.style.display = 'none'; // Hide upload button
                 videoUploadProgressBarContainer.style.display = 'none'; // Hide progress bar
                 tweetBtn.disabled = false; // Ensure post button is enabled after successful post
+
+                // Close the modal after posting
+                tweetComposerModal.classList.remove('active');
 
                 fetchAndDisplayTweets();
             } catch (error) {
