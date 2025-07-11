@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Peep App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* General Body & Layout */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px; /* Added more padding for content */
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: #1da1f2; /* Twitter Blue */
+            color: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: flex-start; /* Align to start for back button */
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            margin-right: 15px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            flex-grow: 1; /* Allows title to take available space */
+            text-align: center; /* Center the title */
+            padding-right: 39px; /* Offset for the back button so title appears centered */
+        }
+
+        /* About Us Card */
+        .about-us-card {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px; /* Increased max-width for better readability */
+            margin-top: 20px;
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        .about-us-card h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .about-us-card p {
+            font-size: 17px;
+            line-height: 1.6;
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .about-us-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .about-us-card ul li {
+            font-size: 17px;
+            color: #444;
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .about-us-card ul li:before {
+            content: "\f00c"; /* FontAwesome check-mark icon */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: #1da1f2; /* Blue tick */
+        }
+
+        .made-in-india {
+            text-align: center;
+            margin-top: 30px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #007bff; /* A distinct color for "Made in India" */
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <button class="back-button" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        </div>
+        <h1>About Peep App</h1>
+    </header>
+
+    <div class="main-content">
+        <div class="about-us-card">
+            <h2>Welcome to Peep!</h2>
+            <p>
+                Peep is your vibrant new social platform, proudly **Made in India**. We've created a space where you can connect, share, and express yourself freely with a community that's always buzzing.
+            </p>
+            <p>
+                On Peep, you can:
+            </p>
+            <ul>
+                <li><strong>Create 'Peeps':</strong> Share your thoughts, ideas, and daily moments with the world. Whether it's a quick update or a detailed insight, your voice matters here.</li>
+                <li><strong>Post Photos,Videos & Text:</strong> Express yourself visually with photos or articulate your ideas with text. Your feed, your way!</li>
+                <li><strong>Follow & Engage:</strong> Discover and follow users whose content you love. Connect with friends, family, and new people who share your interests.</li>
+                <li><strong>Grow Your Community:</strong> Engage with other users by liking, commenting, and resharing their content. Support each other and build a stronger, more interactive network.</li>
+                <li><strong>Get Verified:</strong> For our popular and influential users, Peep offers a **verified tick** to acknowledge their authenticity and contribution to the community.</li>
+            </ul>
+            <p>
+                We believe in fostering a positive and engaging environment for everyone. Join Peep today and start sharing your world!
+            </p>
+            <div class="made-in-india">
+                Proudly Made in India <i class="fas fa-heart" style="color: #e0245e;"></i>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
