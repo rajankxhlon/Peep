@@ -595,8 +595,8 @@
         <div class="three-dot-menu" id="three-dot-menu">
             <i class="fas fa-ellipsis-h"></i>
             <div class="dropdown-content">
-                <button id="request-verification-btn">Request Verification</button>
-                <button id="delete-account-btn">Delete Account</button>
+                <button id="request-verification-btn">About Us</button>
+                <button id="delete-account-btn">Account Settings</button>
                 <button id="logout-btn">Logout</button>
             </div>
         </div>
@@ -610,12 +610,12 @@
             </div>
             <div id="profile-bio" class="profile-bio"></div> <div class="stats-container">
                 <div class="stat-item">
-                    <strong id="following-count">0</strong>
-                    <span>Following</span>
-                </div>
-                <div class="stat-item">
                     <strong id="followers-count">0</strong>
                     <span>Followers</span>
+                </div>
+                <div class="stat-item">
+                    <strong id="following-count">0</strong>
+                    <span>Following</span>
                 </div>
             </div>
             <div class="profile-actions">
@@ -1544,13 +1544,13 @@
 
         // NEW: Request Verification button handler
         requestVerificationBtn.addEventListener('click', () => {
-            window.location.href = 'verification.html'; // Redirect to verification page
+            window.location.href = 'about_us.html'; // Redirect to verification page
             closeAllDropdowns(); // Close the dropdown menu
         });
 
         // NEW: Delete Account button handler
         deleteAccountBtn.addEventListener('click', () => {
-            window.location.href = 'delete_account.html'; // Redirect to the new delete account page
+            window.location.href = 'settings_account.html'; // Redirect to the new delete account page
             closeAllDropdowns(); // Close the dropdown menu
         });
 
