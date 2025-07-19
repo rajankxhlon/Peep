@@ -160,7 +160,7 @@
 
         .user-info .username {
             font-weight: bold;
-            color: #1da1f2;
+            /* Changed from #1da1f2 to default for the link */
             font-size: 16px;
             display: flex;
             align-items: center;
@@ -169,23 +169,22 @@
 
         /* Style for the clickable username link */
         .user-info .username a {
-            color: #1da1f2; /* Twitter blue */
+            color: #66757f; /* Directly set to grey for all search result usernames */
             text-decoration: none; /* Remove underline */
             transition: color 0.2s ease-in-out;
         }
 
         .user-info .username a:hover {
-            color: #0d8ddb; /* Darker blue on hover */
+            color: #0d8ddb; /* Darker blue on hover (if you want hover effect) */
             text-decoration: underline; /* Underline on hover */
         }
 
-
         .verified-badge {
-            width: 16px; /* Adjust size as needed */
-            height: 16px; /* Adjust size as needed */
-            fill: #1da1f2; /* Twitter blue */
-            vertical-align: middle; /* Align with text */
+            width: 12px;
+            height: 12px;
+            vertical-align: middle;
             flex-shrink: 0;
+            margin-left: 2px;
         }
 
         .user-info .name {
@@ -275,26 +274,25 @@
         }
 
         /* --- Mobile Responsiveness --- */
-        /* Basic adjustments for smaller screens if needed, but current design is already quite responsive */
         @media (max-width: 600px) {
             .search-container {
-                padding: 10px; /* Slightly less padding on small screens */
+                padding: 10px;
             }
 
             .search-input {
-                font-size: 15px; /* Slightly smaller font */
-                padding: 8px 40px 8px 12px; /* Adjust padding for smaller input and button */
+                font-size: 15px;
+                padding: 8px 40px 8px 12px;
             }
 
             .search-button {
-                right: 15px; /* Adjust button position */
-                font-size: 16px; /* Smaller icon */
+                right: 15px;
+                font-size: 16px;
                 width: 28px;
                 height: 28px;
             }
 
             .user-card {
-                padding: 12px; /* Slightly less padding on user cards */
+                padding: 12px;
             }
 
             .user-card .profile-pic-container {
@@ -389,6 +387,10 @@
         let currentUserId = null;
         let following = new Set(); // Store usernames of users the current user is following
 
+        // Add a debounce timer variable
+        let searchTimeout;
+        const DEBOUNCE_DELAY = 300; // Milliseconds to wait after typing stops before searching
+
         // Function to fetch current user's following list
         async function fetchFollowingList(userId) {
             if (!userId) {
@@ -427,6 +429,9 @@
             const targetUserRef = db.collection('users').doc(targetUserId);
 
             try {
+                // Temporarily disable the button to prevent multiple clicks
+                buttonElement.disabled = true;
+
                 if (following.has(targetUsername)) {
                     // Unfollow logic
                     await userRef.update({
@@ -437,9 +442,7 @@
                     });
                     following.delete(targetUsername);
                     buttonElement.textContent = 'Follow';
-                    buttonElement.classList.remove('unfollow');
-                    buttonElement.classList.remove('following-disabled');
-                    buttonElement.disabled = false; // Enable for follow click
+                    buttonElement.classList.remove('unfollow', 'following-disabled'); // Remove both classes
                     console.log(`Unfollowed ${targetUsername}`);
 
                 } else {
@@ -452,9 +455,7 @@
                     });
                     following.add(targetUsername);
                     buttonElement.textContent = 'Following';
-                    buttonElement.classList.add('unfollow');
-                    buttonElement.classList.add('following-disabled');
-                    buttonElement.disabled = false; // Enable for unfollow click
+                    buttonElement.classList.add('unfollow', 'following-disabled'); // Add both classes
                     console.log(`Followed ${targetUsername}`);
 
                     // Create a notification for the followed user
@@ -468,9 +469,11 @@
                         read: false
                     });
                 }
+                buttonElement.disabled = false; // Re-enable the button after action
             } catch (error) {
                 console.error("Error toggling follow status:", error);
                 alert("Failed to update follow status. Please try again.");
+                buttonElement.disabled = false; // Re-enable on error as well
             }
         }
 
@@ -486,7 +489,8 @@
             }
 
             if (searchTerm === '') {
-                searchResultsDiv.innerHTML = '<p class="message-container">Please enter a username to search.</p>';
+                searchResultsDiv.innerHTML = '<p class="message-container">Enter a username to search.</p>';
+                initialMessage.style.display = 'block'; // Show initial message when input is empty
                 return;
             }
 
@@ -552,13 +556,30 @@
                     const usernameLink = document.createElement('a');
                     usernameLink.href = `user_profile.html?username=${username}`; // Link to user_profile.html with username
                     usernameLink.textContent = `@${username}`;
+
+                    // The color for all search result usernames is now set directly in CSS,
+                    // so no special class is needed here anymore for making them grey.
+                    // If you want a different color for the EXACT search term match,
+                    // you would add a class here like in the previous version.
+
                     usernameSpan.appendChild(usernameLink);
 
                     if (isVerified) {
                         const verifiedBadge = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                        verifiedBadge.setAttribute("viewBox", "0 0 24 24");
+                        verifiedBadge.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                        verifiedBadge.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+                        verifiedBadge.setAttribute("version", "1.1");
+                        verifiedBadge.setAttribute("width", "20"); /* Adjusted width for better fit */
+                        verifiedBadge.setAttribute("height", "20"); /* Adjusted height for better fit */
+                        verifiedBadge.setAttribute("viewBox", "0 0 256 256"); /* Use original viewBox for scaling */
+                        verifiedBadge.setAttribute("xml:space", "preserve");
                         verifiedBadge.classList.add("verified-badge");
-                        verifiedBadge.innerHTML = '<path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm3.96 8.22a.75.75 0 010 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-2.5-2.5a.75.75 0 011.06-1.06l1.97 1.97 3.97-3.97a.75.75 0 011.06 0z"></path>';
+                        verifiedBadge.innerHTML = `
+                            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                                <polygon points="45,6.18 57.06,0 64.41,11.38 77.94,12.06 78.62,25.59 90,32.94 83.82,45 90,57.06 78.62,64.41 77.94,77.94 64.41,78.62 57.06,90 45,83.82 32.94,90 25.59,78.62 12.06,77.94 11.38,64.41 0,57.06 6.18,45 0,32.94 11.38,25.59 12.06,12.06 25.59,11.38 32.94,0 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(0,150,241); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                                <polygon points="40.16,58.47 26.24,45.08 29.7,41.48 40.15,51.52 61.22,31.08 64.7,34.67 " style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;" transform="  matrix(1 0 0 1 0 0) "/>
+                            </g>
+                        `;
                         usernameSpan.appendChild(verifiedBadge);
                     }
                     userInfo.appendChild(usernameSpan);
@@ -580,14 +601,10 @@
                     // Determine button state: Follow, Following, or Follow Back
                     if (following.has(username)) {
                         followToggleButton.textContent = 'Following';
-                        followToggleButton.classList.add('unfollow'); // Red style for 'unfollow'
-                        followToggleButton.classList.remove('following-disabled'); // Allow unfollow click
-                        followToggleButton.disabled = false;
+                        followToggleButton.classList.add('unfollow', 'following-disabled');
                     } else {
                         followToggleButton.textContent = 'Follow';
-                        followToggleButton.classList.remove('unfollow');
-                        followToggleButton.classList.remove('following-disabled');
-                        followToggleButton.disabled = false;
+                        followToggleButton.classList.remove('unfollow', 'following-disabled');
                     }
 
                     followToggleButton.addEventListener('click', () => {
@@ -608,7 +625,16 @@
             }
         }
 
-        // Event Listeners
+        // --- Live Search Event Listener ---
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+            }, DEBOUNCE_DELAY);
+        });
+
+
+        // Event Listeners for explicit search button (still useful, but live search handles primary interaction)
         searchButton.addEventListener('click', performSearch);
         searchInput.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
@@ -639,6 +665,13 @@
                         }
                     }
                     await fetchFollowingList(currentUserId);
+                    // Perform an initial search if there's already text in the input
+                    if (searchInput.value.trim() !== '') {
+                        performSearch();
+                    } else {
+                         initialMessage.style.display = 'block';
+                    }
+
                 } catch (error) {
                     console.error("Error in auth state change for search page:", error);
                     window.location.href = 'index.html';
