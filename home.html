@@ -454,7 +454,7 @@
         let currentUsername = null;
         let currentUserId = null;
         let currentIsVerified = false;
-        let following = new Set();
+        let following = new Set(); // Stores usernames of users current user is following
 
         // Helper function to format timestamp
         function formatTimestamp(timestamp) {
@@ -503,7 +503,10 @@
 
         // Function to fetch current user's following list
         async function fetchFollowingList(userId) {
-            if (!userId) return;
+            if (!userId) {
+                following = new Set(); // Clear following list if no user
+                return;
+            }
             try {
                 const userDoc = await db.collection('users').doc(userId).get();
                 if (userDoc.exists) {
@@ -516,6 +519,29 @@
                 console.error("Error fetching following list:", error);
             }
         }
+
+        // Function to update the UI for ALL follow buttons based on the `following` set
+        function updateAllFollowButtons() {
+            document.querySelectorAll('.follow-btn').forEach(button => {
+                const targetUsername = button.dataset.username;
+                const targetUserId = button.dataset.userId; // Retrieve user ID for potential future use or consistency
+
+                if (currentUsername && targetUsername === currentUsername) {
+                    button.textContent = 'You';
+                    button.disabled = true;
+                    button.classList.remove('unfollow'); // Ensure no unfollow class on self button
+                } else if (following.has(targetUsername)) {
+                    button.textContent = 'Unfollow';
+                    button.classList.add('unfollow');
+                    button.disabled = false; // Enable if not self
+                } else {
+                    button.textContent = 'Follow';
+                    button.classList.remove('unfollow');
+                    button.disabled = false; // Enable if not self
+                }
+            });
+        }
+
 
         // Function to handle follow/unfollow action
         async function toggleFollow(targetUsername, targetUserId, buttonElement) {
@@ -530,6 +556,9 @@
                 return;
             }
 
+            // Temporarily disable the button to prevent double clicks
+            buttonElement.disabled = true;
+
             const userRef = db.collection('users').doc(currentUserId);
             const targetUserRef = db.collection('users').doc(targetUserId);
 
@@ -542,9 +571,9 @@
                     await targetUserRef.update({
                         followers: firebase.firestore.FieldValue.arrayRemove(currentUsername)
                     });
-                    following.delete(targetUsername);
-                    buttonElement.textContent = 'Follow';
-                    buttonElement.classList.remove('unfollow');
+                    following.delete(targetUsername); // Update local set
+                    buttonElement.textContent = 'Follow'; // Update THIS button
+                    buttonElement.classList.remove('unfollow'); // Update THIS button
 
                 } else {
                     // --- Follow Logic ---
@@ -554,9 +583,9 @@
                     await targetUserRef.update({
                         followers: firebase.firestore.FieldValue.arrayUnion(currentUsername)
                     });
-                    following.add(targetUsername);
-                    buttonElement.textContent = 'Unfollow';
-                    buttonElement.classList.add('unfollow');
+                    following.add(targetUsername); // Update local set
+                    buttonElement.textContent = 'Unfollow'; // Update THIS button
+                    buttonElement.classList.add('unfollow'); // Update THIS button
 
                     // ******************************************************
                     // MODIFIED: CREATE/UPDATE NOTIFICATION WHEN A USER IS FOLLOWED
@@ -600,9 +629,22 @@
                     }
                     // ******************************************************
                 }
+                // Instead of re-fetching ALL tweets, just update the status of ALL visible buttons.
+                // This is efficient because it only changes the UI, not re-renders entire elements.
+                updateAllFollowButtons(); // <--- NEW: Call this to update all buttons in the feed
             } catch (error) {
                 console.error("Error toggling follow status:", error);
                 alert("Failed to update follow status. Please try again.");
+                // Re-enable button on error, and revert its state if needed
+                if (following.has(targetUsername)) { // If it was "Unfollow" before and failed
+                    buttonElement.textContent = 'Unfollow';
+                    buttonElement.classList.add('unfollow');
+                } else { // If it was "Follow" before and failed
+                    buttonElement.textContent = 'Follow';
+                    buttonElement.classList.remove('unfollow');
+                }
+            } finally {
+                buttonElement.disabled = false; // Always re-enable the button
             }
         }
 
@@ -856,6 +898,8 @@
                         followButton.textContent = 'Follow';
                     }
 
+                    // Attach event listener only once during initial render
+                    // This event listener will call the improved toggleFollow
                     followButton.addEventListener('click', () => {
                         toggleFollow(tweet.username, tweet.userId, followButton);
                     });
@@ -1077,7 +1121,9 @@
                         }
                     }
 
+                    // Always fetch the latest following list when the user logs in/state changes
                     await fetchFollowingList(currentUserId);
+                    // Then display tweets initially. The buttons will reflect the correct state.
                     fetchAndDisplayTweets();
                     setupNotificationListener(currentUserId);
 
