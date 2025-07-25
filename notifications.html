@@ -57,6 +57,71 @@
             margin: 0 auto; /* Center horizontally if no other elements are pushing */
         }
 
+        .header .menu-icon {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px; /* Increase clickable area */
+        }
+
+        /* --- Drawer Menu Styling --- */
+        .drawer-menu {
+            position: fixed;
+            top: 0;
+            right: -250px; /* Initially hidden off-screen */
+            width: 250px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 1100; /* Above header */
+            transition: right 0.3s ease-in-out;
+            padding-top: 60px; /* Space for header */
+            box-sizing: border-box;
+        }
+
+        .drawer-menu.open {
+            right: 0; /* Slide in */
+        }
+
+        .drawer-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .drawer-menu ul li {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            color: #333;
+            font-size: 16px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .drawer-menu ul li:last-child {
+            border-bottom: none;
+        }
+
+        .drawer-menu ul li:hover {
+            background-color: #f0f2f5;
+        }
+
+        /* --- Overlay for when drawer is open --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1050; /* Between header and drawer */
+            display: none; /* Hidden by default */
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+
         /* --- Notifications Feed Section --- */
         .notifications-feed {
             width: 100%;
@@ -208,7 +273,17 @@
 <body>
     <header class="header">
         <span id="header-welcome-username" class="welcome-username">Notifications</span>
+        <i class="fas fa-bars menu-icon" id="menu-icon"></i>
     </header>
+
+    <div class="drawer-menu" id="drawer-menu">
+        <ul>
+            <li id="clear-notifications-btn">Clear Notifications</li>
+            </ul>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
 
     <div class="main-content">
         <div class="notifications-feed" id="notifications-feed">
@@ -261,6 +336,11 @@
 
         // Get elements
         const notificationsFeed = document.getElementById('notifications-feed');
+        const menuIcon = document.getElementById('menu-icon');
+        const drawerMenu = document.getElementById('drawer-menu');
+        const overlay = document.getElementById('overlay');
+        const clearNotificationsBtn = document.getElementById('clear-notifications-btn');
+
 
         let currentUsername = null;
         let currentUserId = null;
@@ -569,6 +649,48 @@
                 notificationsFeed.innerHTML = '<p style="text-align: center; color: red;">Error loading notifications. Please try again.</p>';
             }
         }
+
+        // --- Drawer Menu Functionality ---
+        menuIcon.addEventListener('click', () => {
+            drawerMenu.classList.toggle('open');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            drawerMenu.classList.remove('open');
+            overlay.classList.remove('active');
+        });
+
+        clearNotificationsBtn.addEventListener('click', async () => {
+            if (!currentUserId) {
+                alert("You must be logged in to clear notifications.");
+                return;
+            }
+
+            if (confirm("Are you sure you want to clear all your notifications? This action cannot be undone.")) {
+                try {
+                    const notificationsRef = db.collection('notifications');
+                    const batch = db.batch(); // Use batch for multiple deletions
+
+                    const userNotificationsSnapshot = await notificationsRef
+                        .where('toUserId', '==', currentUserId)
+                        .get();
+
+                    userNotificationsSnapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+
+                    await batch.commit();
+                    alert("All notifications cleared successfully!");
+                    drawerMenu.classList.remove('open');
+                    overlay.classList.remove('active');
+                    fetchAndDisplayNotifications(); // Re-fetch to show empty state
+                } catch (error) {
+                    console.error("Error clearing notifications:", error);
+                    alert("Failed to clear notifications. Please try again.");
+                }
+            }
+        });
 
 
         // Check authentication state
