@@ -295,7 +295,7 @@
             top: 0;
             z-index: 1000;
             display: flex;
-            justify-content: flex-start; /* Changed from 'center' to 'flex-start' */
+            justify-content: space-between; /* Changed to space-between for menu icon */
             align-items: center;
             width: 100%; /* Ensure header takes full width */
             box-sizing: border-box;
@@ -304,12 +304,135 @@
         /* App Name Styling for Header */
         .header-app-name-container {
             font-family: 'Pacifico', cursive; /* Instagram-like font */
-            font-size: 16px; /* Slightly smaller font size for a more compact look */
+            font-size: 18px; /* Slightly smaller font size for a more compact look */
             font-weight: normal;
             color: white;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-            margin-left: 10px; /* Add some left margin for spacing */
+            /* Removed margin-left: 10px; as space-between handles positioning */
         }
+
+        /* --- Header Menu Icon Styling --- */
+        .header-menu-icon {
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            padding: 5px; /* Make it easier to click */
+        }
+
+        /* --- Drawer Menu Styling --- */
+        .drawer-menu {
+            position: fixed;
+            top: 0;
+            right: -250px; /* Initially hidden off-screen to the right */
+            width: 250px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1002; /* Above everything else */
+            transition: right 0.3s ease-in-out; /* Smooth slide transition */
+            padding-top: 60px; /* Space for fixed header */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-menu.open {
+            right: 0; /* Slide in */
+        }
+
+        .drawer-menu-item {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            color: #333;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+        }
+
+        .drawer-menu-item:hover {
+            background-color: #f0f2f5;
+        }
+
+        .drawer-menu-item i {
+            margin-right: 10px;
+            color: #66757f;
+        }
+
+        .drawer-menu-item label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* Toggle switch styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #1da1f2;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #1da1f2;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(18px);
+            -ms-transform: translateX(18px);
+            transform: translateX(18px);
+        }
+
+        /* Overlay for when drawer is open */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001; /* Between main content and drawer */
+            display: none; /* Hidden by default */
+        }
+
 
         /* --- Footer Styling --- */
         .footer {
@@ -374,6 +497,7 @@
         <div class="header-app-name-container">
             PEEP
         </div>
+        <i class="fas fa-bars header-menu-icon" id="menu-icon"></i>
     </header>
 
     <div class="main-content">
@@ -385,6 +509,32 @@
     <a href="create.html" class="fab-button">
         <i class="fas fa-feather-alt"></i>
     </a>
+
+    <div class="drawer-menu" id="drawer-menu">
+        <div class="drawer-menu-item">
+            <label for="autoplay-toggle">
+                <i class="fas fa-play-circle"></i> Video Autoplay
+            </label>
+            <label class="switch">
+                <input type="checkbox" id="autoplay-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="drawer-menu-item">
+            <label for="data-server-toggle">
+                <i class="fas fa-database"></i> Data Server
+            </label>
+            <label class="switch">
+                <input type="checkbox" id="data-server-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <a href="#" class="drawer-menu-item" id="logout-button">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
 
     <footer class="footer">
         <a href="home.html" class="footer-icon active">
@@ -435,14 +585,27 @@
         const db = firebase.firestore();
 
         // Get elements
-        // Removed headerWelcomeUsernameContainer and headerWelcomeUsernameElement as they are no longer needed for dynamically inserting username
         const tweetsFeed = document.getElementById('tweets-feed');
         const notificationBadge = document.getElementById('notification-badge');
+        const menuIcon = document.getElementById('menu-icon');
+        const drawerMenu = document.getElementById('drawer-menu');
+        const overlay = document.getElementById('overlay');
+        const autoplayToggle = document.getElementById('autoplay-toggle');
+        const dataServerToggle = document.getElementById('data-server-toggle');
+        const logoutButton = document.getElementById('logout-button');
 
         let currentUsername = null;
         let currentUserId = null;
-        let currentIsVerified = false; // No longer needed for header but kept for other functionalities
+        let currentIsVerified = false;
         let following = new Set(); // Stores usernames of users current user is following
+
+        // --- Load preferences from localStorage on app start ---
+        let videoAutoplayEnabled = localStorage.getItem('videoAutoplay') === 'true'; // Default to false if not found
+        let dataServerOn = localStorage.getItem('dataServerOn') === 'true'; // Default to false if not found
+
+        // Set initial state of toggles based on loaded preferences
+        autoplayToggle.checked = videoAutoplayEnabled;
+        dataServerToggle.checked = dataServerOn;
 
         // Helper function to format timestamp
         function formatTimestamp(timestamp) {
@@ -917,7 +1080,7 @@
                         const tweetVideo = document.createElement('video');
                         tweetVideo.classList.add('tweet-video');
                         tweetVideo.src = tweet.videoUrl;
-                        tweetVideo.autoplay = false;
+                        tweetVideo.autoplay = videoAutoplayEnabled; // Use the loaded preference
                         tweetVideo.loop = true;
                         tweetVideo.muted = true;
                         tweetVideo.alt = 'Tweet video';
@@ -960,8 +1123,12 @@
                         }
                         // End NEW
 
-                        // Attach Intersection Observer to the video
-                        videoObserver.observe(tweetVideo);
+                        // Attach Intersection Observer to the video ONLY if autoplay is enabled
+                        if (videoAutoplayEnabled) {
+                             videoObserver.observe(tweetVideo);
+                        } else {
+                            videoObserver.unobserve(tweetVideo); // Ensure it's not observed if autoplay is off
+                        }
                     }
 
 
@@ -1018,6 +1185,7 @@
         }
 
         // --- Intersection Observer for Video Autoplay ---
+        // This observer will only be active if videoAutoplayEnabled is true
         const videoObserverOptions = {
             root: null,
             rootMargin: '0px',
@@ -1027,7 +1195,7 @@
         const videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const video = entry.target;
-                if (entry.isIntersecting) {
+                if (videoAutoplayEnabled && entry.isIntersecting) { // Check preference before playing
                     video.play().catch(error => {
                         console.warn("Video autoplay prevented:", error);
                     });
@@ -1064,6 +1232,58 @@
                 });
         }
 
+        // --- Drawer Menu Functions ---
+        function openDrawer() {
+            drawerMenu.classList.add('open');
+            overlay.style.display = 'block';
+        }
+
+        function closeDrawer() {
+            drawerMenu.classList.remove('open');
+            overlay.style.display = 'none';
+        }
+
+        // Event listeners for drawer menu
+        menuIcon.addEventListener('click', openDrawer);
+        overlay.addEventListener('click', closeDrawer);
+
+        // Video Autoplay Toggle
+        autoplayToggle.addEventListener('change', () => {
+            videoAutoplayEnabled = autoplayToggle.checked;
+            localStorage.setItem('videoAutoplay', videoAutoplayEnabled); // Save preference
+            // Re-fetch and display tweets to apply the new autoplay setting
+            // Or, iterate through existing videos and apply/remove observation
+            // For simplicity, re-fetching is fine if the tweet count isn't massive.
+            // If there are many videos, you'd want a more granular update.
+            fetchAndDisplayTweets();
+        });
+
+        // Data Server Toggle (Placeholder)
+        dataServerToggle.addEventListener('change', () => {
+            dataServerOn = dataServerToggle.checked;
+            localStorage.setItem('dataServerOn', dataServerOn); // Save preference
+            if (dataServerOn) {
+                alert("Data Server ON (Simulated)");
+                // In a real app, you might enable certain data fetching logic here
+            } else {
+                alert("Data Server OFF (Simulated)");
+                // In a real app, you might disable certain data fetching logic here
+            }
+        });
+
+        // Logout functionality
+        logoutButton.addEventListener('click', async (e) => {
+            e.preventDefault(); // Prevent default link behavior
+            try {
+                await auth.signOut();
+                window.location.href = 'index.html'; // Redirect to login page
+            } catch (error) {
+                console.error("Error signing out:", error);
+                alert("Failed to log out. Please try again.");
+            }
+        });
+
+
         // Check authentication state
         auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -1074,8 +1294,6 @@
                         const userData = userDoc.data();
                         currentUsername = userData.username;
                         currentIsVerified = userData.isVerified || false;
-                        // Removed: headerWelcomeUsernameElement.textContent = `Welcome @${currentUsername}`;
-                        // Removed: Verified tick logic for header
                     } else {
                         const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
                         if (!usernameQuery.empty) {
@@ -1086,7 +1304,6 @@
                                 username: currentUsername,
                                 isVerified: currentIsVerified
                             }, { merge: true });
-                            // Removed: headerWelcomeUsernameElement.textContent and verified tick for header
                         } else {
                             window.location.href = 'index.html';
                             return;
