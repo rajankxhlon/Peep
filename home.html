@@ -983,6 +983,12 @@
                 // Shuffle the tweets array
                 shuffleArray(tweets);
 
+                // Disconnect any existing observers before clearing the feed
+                // This prevents old observers from trying to act on removed elements
+                document.querySelectorAll('.tweet-video').forEach(video => {
+                    videoObserver.unobserve(video);
+                });
+
                 tweetsFeed.innerHTML = ''; // Clear loading message
 
                 if (tweets.length === 0) {
@@ -1080,7 +1086,7 @@
                         const tweetVideo = document.createElement('video');
                         tweetVideo.classList.add('tweet-video');
                         tweetVideo.src = tweet.videoUrl;
-                        tweetVideo.autoplay = videoAutoplayEnabled; // Use the loaded preference
+                        tweetVideo.autoplay = videoAutoplayEnabled; // Use the loaded preference for initial state
                         tweetVideo.loop = true;
                         tweetVideo.muted = true;
                         tweetVideo.alt = 'Tweet video';
@@ -1090,7 +1096,9 @@
                         // Play/Pause on click
                         tweetVideo.addEventListener('click', () => {
                             if (tweetVideo.paused) {
-                                tweetVideo.play();
+                                tweetVideo.play().catch(error => {
+                                    console.warn("Manual video play prevented:", error);
+                                });
                             } else {
                                 tweetVideo.pause();
                             }
@@ -1123,12 +1131,8 @@
                         }
                         // End NEW
 
-                        // Attach Intersection Observer to the video ONLY if autoplay is enabled
-                        if (videoAutoplayEnabled) {
-                             videoObserver.observe(tweetVideo);
-                        } else {
-                            videoObserver.unobserve(tweetVideo); // Ensure it's not observed if autoplay is off
-                        }
+                        // Always observe videos regardless of autoplay setting, so they pause when out of view
+                        videoObserver.observe(tweetVideo);
                     }
 
 
@@ -1184,8 +1188,7 @@
             }
         }
 
-        // --- Intersection Observer for Video Autoplay ---
-        // This observer will only be active if videoAutoplayEnabled is true
+        // --- Intersection Observer for Video Autoplay and Pause on Scroll ---
         const videoObserverOptions = {
             root: null,
             rootMargin: '0px',
@@ -1195,12 +1198,17 @@
         const videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const video = entry.target;
-                if (videoAutoplayEnabled && entry.isIntersecting) { // Check preference before playing
-                    video.play().catch(error => {
-                        console.warn("Video autoplay prevented:", error);
-                    });
+                if (entry.isIntersecting) {
+                    if (videoAutoplayEnabled) { // Only autoplay if enabled
+                        video.play().catch(error => {
+                            console.warn("Video autoplay prevented:", error);
+                        });
+                    }
                 } else {
-                    video.pause();
+                    // Always pause if not intersecting, regardless of autoplay setting
+                    if (!video.paused) { // Only pause if it's currently playing
+                        video.pause();
+                    }
                 }
             });
         }, videoObserverOptions);
@@ -1251,10 +1259,10 @@
         autoplayToggle.addEventListener('change', () => {
             videoAutoplayEnabled = autoplayToggle.checked;
             localStorage.setItem('videoAutoplay', videoAutoplayEnabled); // Save preference
-            // Re-fetch and display tweets to apply the new autoplay setting
-            // Or, iterate through existing videos and apply/remove observation
-            // For simplicity, re-fetching is fine if the tweet count isn't massive.
-            // If there are many videos, you'd want a more granular update.
+            // When the autoplay setting changes, re-evaluate all videos' observation.
+            // For simplicity, re-fetching and rendering is often the easiest way to apply global changes.
+            // If performance is critical with many videos, you'd iterate through existing videos
+            // and adjust their autoplay property and observer state individually.
             fetchAndDisplayTweets();
         });
 
