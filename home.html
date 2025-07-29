@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Twitter Clone Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <style>
         /* --- General Body & Layout (Portrait Focused) --- */
         body {
@@ -294,33 +295,21 @@
             top: 0;
             z-index: 1000;
             display: flex;
-            justify-content: flex-start; /* Aligned to the left */
+            justify-content: flex-start; /* Changed from 'center' to 'flex-start' */
             align-items: center;
             width: 100%; /* Ensure header takes full width */
             box-sizing: border-box;
         }
 
-        .header .welcome-username-container {
-            display: flex;
-            align-items: center;
-            gap: 5px; /* Space between username and tick */
-            font-size: 14px; /* Smaller font size for compactness */
-            font-weight: bold;
+        /* App Name Styling for Header */
+        .header-app-name-container {
+            font-family: 'Pacifico', cursive; /* Instagram-like font */
+            font-size: 16px; /* Slightly smaller font size for a more compact look */
+            font-weight: normal;
             color: white;
-            white-space: nowrap; /* Prevent username from wrapping */
-            overflow: hidden; /* Hide overflow if too long */
-            text-overflow: ellipsis; /* Add ellipsis for overflowed text */
-            margin-left: 0; /* Ensure it starts from the left */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            margin-left: 10px; /* Add some left margin for spacing */
         }
-
-        /* Re-using the existing verified-tick class for the header tick */
-        .header .verified-tick {
-            width: 13px; /* Slightly smaller tick in header */
-            height: 13px;
-            margin-left: 0; /* Remove extra margin if any */
-            flex-shrink: 0;
-        }
-
 
         /* --- Footer Styling --- */
         .footer {
@@ -382,9 +371,9 @@
 </head>
 <body>
     <header class="header">
-        <div id="header-welcome-username-container" class="welcome-username-container">
-            <span id="header-welcome-username"></span>
-            </div>
+        <div class="header-app-name-container">
+            PEEP
+        </div>
     </header>
 
     <div class="main-content">
@@ -446,14 +435,13 @@
         const db = firebase.firestore();
 
         // Get elements
-        const headerWelcomeUsernameContainer = document.getElementById('header-welcome-username-container');
-        const headerWelcomeUsernameElement = document.getElementById('header-welcome-username');
+        // Removed headerWelcomeUsernameContainer and headerWelcomeUsernameElement as they are no longer needed for dynamically inserting username
         const tweetsFeed = document.getElementById('tweets-feed');
         const notificationBadge = document.getElementById('notification-badge');
 
         let currentUsername = null;
         let currentUserId = null;
-        let currentIsVerified = false;
+        let currentIsVerified = false; // No longer needed for header but kept for other functionalities
         let following = new Set(); // Stores usernames of users current user is following
 
         // Helper function to format timestamp
@@ -488,7 +476,7 @@
             }
         }
 
-        // Function to create the verified tick SVG element
+        // Function to create the verified tick SVG element (still needed for tweet cards)
         function createVerifiedTickSvg() {
             const svgString = `<svg class="verified-tick" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
 <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
@@ -1086,35 +1074,19 @@
                         const userData = userDoc.data();
                         currentUsername = userData.username;
                         currentIsVerified = userData.isVerified || false;
-                        headerWelcomeUsernameElement.textContent = `Welcome @${currentUsername}`;
-
-                        if (currentIsVerified) {
-                            const existingTick = headerWelcomeUsernameContainer.querySelector('.verified-tick');
-                            if (existingTick) {
-                                existingTick.remove();
-                            }
-                            headerWelcomeUsernameContainer.appendChild(createVerifiedTickSvg());
-                        }
-
+                        // Removed: headerWelcomeUsernameElement.textContent = `Welcome @${currentUsername}`;
+                        // Removed: Verified tick logic for header
                     } else {
                         const usernameQuery = await db.collection('usernames').where('userId', '==', user.uid).limit(1).get();
                         if (!usernameQuery.empty) {
                             const usernameDoc = usernameQuery.docs[0];
                             currentUsername = usernameDoc.id;
                             currentIsVerified = usernameDoc.data().isVerified || false;
-                            headerWelcomeUsernameElement.textContent = `Welcome @${currentUsername}`;
                             await db.collection('users').doc(user.uid).set({
                                 username: currentUsername,
                                 isVerified: currentIsVerified
                             }, { merge: true });
-
-                            if (currentIsVerified) {
-                                const existingTick = headerWelcomeUsernameContainer.querySelector('.verified-tick');
-                                if (existingTick) {
-                                    existingTick.remove();
-                                }
-                                headerWelcomeUsernameContainer.appendChild(createVerifiedTickSvg());
-                            }
+                            // Removed: headerWelcomeUsernameElement.textContent and verified tick for header
                         } else {
                             window.location.href = 'index.html';
                             return;
